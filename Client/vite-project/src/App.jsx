@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import Header from "./pages/Header"
 import AuthForms from "./components/AuthForms"
+import Footer from "./pages/Footer"
 
 function App() {
 
@@ -20,9 +21,9 @@ function App() {
           <Route path="/authforms" element={<AuthForms />} />
         
 
-          
         </Routes>
-          
+
+          <Footer /> 
         </BrowserRouter>
       </div>
     </>
