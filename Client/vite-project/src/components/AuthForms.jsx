@@ -11,7 +11,8 @@ const AuthForms = () => {
     lastName: '',
     phone: '',
     dateOfBirth: '',
-    acceptTerms: false
+    acceptTerms: false,
+    rememberMe: false  // הוספה
   });
 
   
@@ -164,6 +165,13 @@ const AuthForms = () => {
       setIsLoading(false);
       setSuccessMessage(isLogin ? 'התחברת בהצלחה! 🎉' : 'נרשמת בהצלחה! 🎉');
       
+      // שמירה ב-localStorage אם "זכור אותי" מסומן
+      if (isLogin && formData.rememberMe) {
+        localStorage.setItem('rememberedEmail', formData.email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+      
       // Reset form after success
       setTimeout(() => {
         setSuccessMessage('');
@@ -206,20 +214,19 @@ const AuthForms = () => {
     return 'excellent';
   };
 
+  // טעינת נתונים שמורים בטעינת הקומפוננטה
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail, rememberMe: true }));
+    }
+  }, []);
 
 
 
 
+  ///////////////////////////////////////////
 
-
-
-
-
-
-
-
-
-  
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -466,10 +473,14 @@ const AuthForms = () => {
           {isLogin && (
             <div className="form-options">
               <label className="remember-me">
-                <input type="checkbox" />
+                <input 
+                  type="checkbox"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                />
                 <span>זכור אותי</span>
               </label>
-              <a href="#" className="forgot-password">שכחתי סיסמה</a>
             </div>
           )}
 
