@@ -1,0 +1,55 @@
+/* styles-header.css */
+
+/* כלליים */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial;
+  background: #f7f7f7;
+}
+
+/* Header */
+header {
+  background: linear-gradient(90deg, #1db954, #ff66cc);
+  padding: 25px;
+  text-align: center;
+  color: white;
+  font-size: 15px;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Navbar */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  padding: 15px 0;
+  background: #ffffffcc;
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid #e5e5e5;
+}
+
+nav a {
+  text-decoration: none;
+  font-size: 18px;
+  color: #333;
+  padding: 8px 15px;
+  border-radius: 10px;
+  transition: 0.25s;
+}
+
+nav a:hover {
+  background: #1db954;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Active link */
+nav a.active {
+  background: #ff66cc;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
