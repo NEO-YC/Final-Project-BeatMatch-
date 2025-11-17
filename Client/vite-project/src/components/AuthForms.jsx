@@ -2,49 +2,65 @@ import { useState, useEffect } from 'react';
 import './AuthForms.css';
 
 const AuthForms = () => {
+  // State: מצב הטופס - התחברות או הרשמה
   const [isLogin, setIsLogin] = useState(true);
+  
+  // State: נתוני הטופס - מכיל את כל השדות שהמשתמש ממלא
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    dateOfBirth: '',
-    acceptTerms: false,
-    rememberMe: false  // הוספה
+    email: '',              // אימייל המשתמש
+    password: '',           // סיסמה
+    confirmPassword: '',    // אימות סיסמה (רק בהרשמה)
+    firstName: '',          // שם פרטי (רק בהרשמה)
+    lastName: '',           // שם משפחה (רק בהרשמה)
+    phone: '',              // מספר טלפון (אופציונלי)
+    dateOfBirth: '',        // תאריך לידה (אופציונלי)
+    acceptTerms: false,     // אישור תנאי שימוש (רק בהרשמה)
+    rememberMe: false       // "זכור אותי" (רק בהתחברות)
   });
 
-  
+  // State: שגיאות ולידציה - מכיל הודעות שגיאה לכל שדה
   const [errors, setErrors] = useState({});
+  
+  // State: תצוגת סיסמאות - האם להציג את הסיסמה בטקסט רגיל
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // State: חוזק סיסמה - ציון בין 0-100
   const [passwordStrength, setPasswordStrength] = useState(0);
+  
+  // State: מצב טעינה - האם הטופס בתהליך שליחה
   const [isLoading, setIsLoading] = useState(false);
+  
+  // State: הודעת הצלחה - הודעה שמוצגת לאחר הצלחה
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // State: מודלים - האם לפתוח מודל תנאי שימוש או מדיניות פרטיות
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
-  // Password strength calculator
+  // Effect: חישוב חוזק סיסמה בזמן אמת
+  // מחשב ציון לפי אורך, אותיות גדולות/קטנות, מספרים ותווים מיוחדים
   useEffect(() => {
     if (!isLogin && formData.password) {
       let strength = 0;
-      if (formData.password.length >= 8) strength += 20;
-      if (formData.password.length >= 12) strength += 10;
-      if (/[a-z]/.test(formData.password)) strength += 20;
-      if (/[A-Z]/.test(formData.password)) strength += 20;
-      if (/[0-9]/.test(formData.password)) strength += 15;
-      if (/[^A-Za-z0-9]/.test(formData.password)) strength += 15;
+      if (formData.password.length >= 8) strength += 20;   // אורך מינימלי
+      if (formData.password.length >= 12) strength += 10;  // אורך מומלץ
+      if (/[a-z]/.test(formData.password)) strength += 20; // אותיות קטנות
+      if (/[A-Z]/.test(formData.password)) strength += 20; // אותיות גדולות
+      if (/[0-9]/.test(formData.password)) strength += 15; // מספרים
+      if (/[^A-Za-z0-9]/.test(formData.password)) strength += 15; // תווים מיוחדים
       setPasswordStrength(strength);
     }
   }, [formData.password, isLogin]);
 
-  // Real-time validation
+  // Function: בדיקת תקינות שדה בודד
+  // מקבלת שם שדה וערך, מחזירה true אם תקין ו-false אם לא
   const validateField = (name, value) => {
     let error = '';
 
     switch (name) {
       case 'email':
+        // בדיקת פורמט אימייל תקין
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value) {
           error = 'אימייל הוא שדה חובה';
@@ -54,6 +70,7 @@ const AuthForms = () => {
         break;
 
       case 'password':
+        // בדיקת חוזק סיסמה - לפחות 8 תווים, אותיות גדולות/קטנות ומספרים
         if (!value) {
           error = 'סיסמה היא שדה חובה';
         } else if (value.length < 8) {
@@ -64,12 +81,14 @@ const AuthForms = () => {
         break;
 
       case 'confirmPassword':
+        // בדיקה שהסיסמה תואמת (רק בהרשמה)
         if (!isLogin && value !== formData.password) {
           error = 'הסיסמאות אינן תואמות';
         }
         break;
 
       case 'firstName':
+        // בדיקת שם פרטי (רק בהרשמה)
         if (!isLogin && !value) {
           error = 'שם פרטי הוא שדה חובה';
         } else if (!isLogin && value.length < 2) {
@@ -78,6 +97,7 @@ const AuthForms = () => {
         break;
 
       case 'lastName':
+        // בדיקת שם משפחה (רק בהרשמה)
         if (!isLogin && !value) {
           error = 'שם משפחה הוא שדה חובה';
         } else if (!isLogin && value.length < 2) {
@@ -86,6 +106,7 @@ const AuthForms = () => {
         break;
 
       case 'phone':
+        // בדיקת פורמט טלפון ישראלי (אופציונלי)
         const phoneRegex = /^05\d{8}$/;
         if (!isLogin && value && !phoneRegex.test(value)) {
           error = 'אנא הזן מספר טלפון תקין (050-1234567)';
@@ -93,17 +114,19 @@ const AuthForms = () => {
         break;
 
       case 'dateOfBirth':
+        // בדיקת גיל מינימלי (אופציונלי)
         if (!isLogin && value) {
           const today = new Date();
           const birthDate = new Date(value);
           const age = today.getFullYear() - birthDate.getFullYear();
-          if (age < 13) {
-            error = 'חייבים להיות בני 13 לפחות';
+          if (age < 8) {
+            error = 'חייבים להיות בני 8 לפחות';
           }
         }
         break;
 
       case 'acceptTerms':
+        // בדיקת אישור תנאי שימוש (רק בהרשמה)
         if (!isLogin && !value) {
           error = 'חובה לאשר את תנאי השימוש';
         }
@@ -113,34 +136,45 @@ const AuthForms = () => {
         break;
     }
 
+    // עדכון state של השגיאות
     setErrors(prev => ({ ...prev, [name]: error }));
     return error === '';
   };
 
+  // Handler: טיפול בשינוי ערך בשדות הטופס
+  // מתעדכן בכל הקשה ומבצע ולידציה בזמן אמת
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    // checkbox מחזיר checked, שאר השדות מחזירים value
     const fieldValue = type === 'checkbox' ? checked : value;
     
+    // עדכון הערך ב-state
     setFormData(prev => ({
       ...prev,
       [name]: fieldValue
     }));
 
-    // Validate on change
+    // בדיקת תקינות בזמן אמת
     validateField(name, fieldValue);
   };
 
+  // Handler: טיפול ביציאה משדה (blur)
+  // מבצע ולידציה כשהמשתמש עוזב את השדה
   const handleBlur = (e) => {
     const { name, value } = e.target;
     validateField(name, value);
   };
 
+  // Function: בדיקת תקינות כל הטופס לפני שליחה
+  // מחזירה true רק אם כל השדות הנדרשים תקינים
   const validateForm = () => {
     let isValid = true;
+    // רשימת שדות לבדיקה - תלוי אם זה התחברות או הרשמה
     const fields = isLogin 
-      ? ['email', 'password']
-      : ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'acceptTerms'];
+      ? ['email', 'password']  // התחברות: רק אימייל וסיסמה
+      : ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'acceptTerms'];  // הרשמה: כל השדות
 
+    // בדיקה של כל שדה
     fields.forEach(field => {
       if (!validateField(field, formData[field])) {
         isValid = false;
@@ -150,29 +184,33 @@ const AuthForms = () => {
     return isValid;
   };
 
+  // Handler: טיפול בשליחת הטופס
+  // מבצע ולידציה, סימולציה של קריאה לשרת, ושמירת "זכור אותי"
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault();  // מונע רענון דף
     
+    // בדיקה שכל השדות תקינים
     if (!validateForm()) {
-      return;
+      return;  // עצירה אם יש שגיאות
     }
 
-    setIsLoading(true);
+    setIsLoading(true);  // הצגת אנימציית טעינה
     setSuccessMessage('');
 
-    // Simulate API call
+    // סימולציה של קריאה לשרת (2 שניות)
+    // במציאות כאן תהיה קריאה ל-API
     setTimeout(() => {
       setIsLoading(false);
       setSuccessMessage(isLogin ? 'התחברת בהצלחה! 🎉' : 'נרשמת בהצלחה! 🎉');
       
-      // שמירה ב-localStorage אם "זכור אותי" מסומן
+      // שמירה או מחיקה של אימייל ב-localStorage לפי "זכור אותי"
       if (isLogin && formData.rememberMe) {
         localStorage.setItem('rememberedEmail', formData.email);
       } else {
         localStorage.removeItem('rememberedEmail');
       }
       
-      // Reset form after success
+      // איפוס הטופס אחרי 3 שניות
       setTimeout(() => {
         setSuccessMessage('');
         resetForm();
@@ -180,6 +218,8 @@ const AuthForms = () => {
     }, 2000);
   };
 
+  // Function: איפוס כל שדות הטופס
+  // מנקה את כל השדות, השגיאות וחוזק הסיסמה
   const resetForm = () => {
     setFormData({
       email: '',
@@ -191,41 +231,56 @@ const AuthForms = () => {
       dateOfBirth: '',
       acceptTerms: false
     });
-    setErrors({});
-    setPasswordStrength(0);
+    setErrors({});  // ניקוי כל השגיאות
+    setPasswordStrength(0);  // איפוס חוזק סיסמה
   };
 
+  // Function: מעבר בין מצב התחברות להרשמה
+  // מחליף את המצב ומאפס את הטופס
   const toggleFormMode = () => {
-    setIsLogin(!isLogin);
-    resetForm();
+    setIsLogin(!isLogin);  // היפוך המצב
+    resetForm();  // ניקוי הטופס
   };
 
+  // Function: קבלת תווית לחוזק הסיסמה
+  // מחזירה טקסט בעברית לפי הציון (0-100)
   const getPasswordStrengthLabel = () => {
-    if (passwordStrength < 40) return 'חלשה';
-    if (passwordStrength < 70) return 'בינונית';
-    if (passwordStrength < 90) return 'חזקה';
-    return 'מצוינת';
+    if (passwordStrength < 40) return 'חלשה';     // 0-39
+    if (passwordStrength < 70) return 'בינונית';  // 40-69
+    if (passwordStrength < 90) return 'חזקה';     // 70-89
+    return 'מצוינת';                              // 90-100
   };
 
+  // Function: קבלת class CSS לחוזק הסיסמה
+  // מחזירה שם class לצביעת הפס לפי חוזק הסיסמה
   const getPasswordStrengthClass = () => {
-    if (passwordStrength < 40) return 'weak';
-    if (passwordStrength < 70) return 'medium';
-    if (passwordStrength < 90) return 'strong';
-    return 'excellent';
+    if (passwordStrength < 40) return 'weak';      // אדום
+    if (passwordStrength < 70) return 'medium';    // כתום
+    if (passwordStrength < 90) return 'strong';    // כחול
+    return 'excellent';                             // ירוק
   };
 
-  // טעינת נתונים שמורים בטעינת הקומפוננטה
+  // Effect: טעינת אימייל שמור בעת טעינת הקומפוננטה
+  // אם המשתמש סימן "זכור אותי" בעבר, האימייל יטען אוטומטית
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail');
     if (savedEmail) {
+      // מילוי אוטומטי של האימייל וסימון ה-checkbox
       setFormData(prev => ({ ...prev, email: savedEmail, rememberMe: true }));
     }
-  }, []);
+  }, []);  // [] = רץ פעם אחת בלבד בטעינה
 
 
 
 
-  ///////////////////////////////////////////
+
+
+  
+
+
+  /* ============================================
+     JSX - תצוגת הטופס
+     ============================================ */
 
   return (
     <div className="auth-container">
