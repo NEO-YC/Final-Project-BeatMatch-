@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  phone: {
+    type: String,
+    required: false
+  }
 
 }, {
   timestamps: true 
