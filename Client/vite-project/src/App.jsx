@@ -17,7 +17,7 @@ function App() {
         <BrowserRouter>
         <Header />
         <Routes>
-          <Route path="/*" element={<div>HOME</div>} />
+          <Route path="/*" element={<div>בית</div>} />
           <Route path="/authforms" element={<AuthForms />} />
         
 

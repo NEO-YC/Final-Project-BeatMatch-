@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async function (req, res) {
     try {
-        const { firstname, lastname, email, password, birthday } = req.body;
+        const { firstname, lastname, email, password, birthday ,phone} = req.body;
       
         
         // בדיקת תקינות הנתונים
@@ -42,7 +42,8 @@ exports.register = async function (req, res) {
             lastname,
             email,
             password: hashedPassword,
-            birthday: new Date(birthday)
+            birthday: new Date(birthday),
+            phone: phone || null,
         });
         
         const savedUser = await newUser.save();
@@ -57,6 +58,7 @@ exports.register = async function (req, res) {
             lastname: savedUser.lastname,
             email: savedUser.email,
             birthday: savedUser.birthday,
+            phone: savedUser.phone,
             createdAt: savedUser.createdAt,
             updatedAt: savedUser.updatedAt
         };

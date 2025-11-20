@@ -16,7 +16,7 @@ function Header() {
         <h1>MUSIC PROJECT</h1>
         </header>
         <nav>
-            <NavLink to="/">Home </NavLink>
+            <NavLink to="/">בית </NavLink>
             <NavLink to="/authforms">טופס הרשמה והתחברות </NavLink>
      
         </nav>
