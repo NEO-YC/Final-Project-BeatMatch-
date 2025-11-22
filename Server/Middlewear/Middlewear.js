@@ -49,6 +49,9 @@ exports.authenticateToken = async (req, res, next) => {
             firstname: user.firstname,
             lastname: user.lastname
         };
+        
+        // שמירת userId בנפרד לנוחות (משמש ב-Controllers)
+        req.userId = user._id;
 
         next();
 
