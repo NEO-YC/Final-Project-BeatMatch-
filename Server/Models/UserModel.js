@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
       experienceYears:  { type: String, trim: true },
       profilePicture:   { type: String, trim: true },
       eventTypes:       [{ type: String, trim: true }],
-      bio:              { type: String, trim: true },
+      bio:              { type: String, trim: true, maxlength: 250 },
       location:         [{ type: String, trim: true }],
       galleryPictures:  [{ type: String, trim: true }],
       galleryVideos:    [{ type: String, trim: true }],

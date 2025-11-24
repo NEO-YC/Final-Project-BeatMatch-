@@ -18,6 +18,7 @@ function Header() {
         <nav>
             <NavLink to="/">Home </NavLink>
             <NavLink to="/authforms">טופס הרשמה והתחברות </NavLink>
+            <NavLink to="/musician/create">צור פרופיל מוזיקאי</NavLink>
      
         </nav>
     </div>

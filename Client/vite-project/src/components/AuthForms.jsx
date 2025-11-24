@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AuthForms.css';
 
 const AuthForms = () => {
@@ -184,6 +185,9 @@ const AuthForms = () => {
     return isValid;
   };
 
+  // נשתמש ב-useNavigate כדי לבצע הפניה לדפים אחרים אחרי פעולות (לדוגמה: אחרי הרשמה)
+  const navigate = useNavigate();
+
   // Handler: טיפול בשליחת הטופס
   // מבצע ולידציה, סימולציה של קריאה לשרת, ושמירת "זכור אותי"
   const handleSubmit = async (e) => {
@@ -208,6 +212,12 @@ const AuthForms = () => {
         localStorage.setItem('rememberedEmail', formData.email);
       } else {
         localStorage.removeItem('rememberedEmail');
+      }
+
+      // אם זה מצב הרשמה — מעבירים מיד לדף יצירת פרופיל מוזיקאי
+      // ברגע שההרשמה הושלמה בהצלחה
+      if (!isLogin) {
+        navigate('/musician/create');
       }
       
       // איפוס הטופס אחרי 3 שניות
