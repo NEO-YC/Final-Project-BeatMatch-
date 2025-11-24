@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 exports.register = async function (req, res) {
     try {
         const { firstname, lastname, email, password, birthday, phone} = req.body;
-      
+         
         
         // בדיקת תקינות הנתונים
         if (!firstname || !lastname || !email || !password || !birthday) {
