@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './AuthForms.css';
 
 const AuthForms = () => {
@@ -189,43 +190,61 @@ const AuthForms = () => {
   const navigate = useNavigate();
 
   // Handler: טיפול בשליחת הטופס
-  // מבצע ולידציה, סימולציה של קריאה לשרת, ושמירת "זכור אותי"
+  // מבצע ולידציה, קורא ל-API של השרת, ושומר טוקן ב-localStorage
   const handleSubmit = async (e) => {
-    e.preventDefault();  // מונע רענון דף
-    
-    // בדיקה שכל השדות תקינים
-    if (!validateForm()) {
-      return;  // עצירה אם יש שגיאות
-    }
+    e.preventDefault();
 
-    setIsLoading(true);  // הצגת אנימציית טעינה
+    if (!validateForm()) return;
+
+    setIsLoading(true);
     setSuccessMessage('');
+    setErrors(prev => ({ ...prev, form: '' }));
 
-    // סימולציה של קריאה לשרת (2 שניות)
-    // במציאות כאן תהיה קריאה ל-API
-    setTimeout(() => {
+    try {
+      if (isLogin) {
+        const payload = { email: formData.email, password: formData.password };
+        const res = await api.login(payload);
+        // צפוי לקבל { token, user } מהשרת
+        if (res && res.token) {
+          localStorage.setItem('token', res.token);
+          if (formData.rememberMe) localStorage.setItem('rememberedEmail', formData.email);
+          else localStorage.removeItem('rememberedEmail');
+          setSuccessMessage('התחברת בהצלחה! 🎉');
+          setIsLoading(false);
+          navigate('/');
+        } else {
+          throw res || new Error('Login failed');
+        }
+        } else {
+        // server expects 'firstname', 'lastname' and 'birthday' (not camelCase)
+        const payload = {
+          email: formData.email,
+          password: formData.password,
+          firstname: formData.firstName,
+          lastname: formData.lastName,
+          phone: formData.phone,
+          birthday: formData.dateOfBirth
+        };
+        const res = await api.register(payload);
+        // אם השרת מחזיר טוקן - נשמור אותו ונפנה ליצירת פרופיל
+        if (res && res.token) {
+          localStorage.setItem('token', res.token);
+          setSuccessMessage('נרשמת בהצלחה! 🎉');
+          setIsLoading(false);
+          navigate('/musician/create');
+        } else {
+          // Registration succeeded but no token returned
+          setSuccessMessage('נרשמת בהצלחה!');
+          setIsLoading(false);
+          navigate('/musician/create');
+        }
+      }
+    } catch (err) {
+      console.error('Auth error:', err);
+      const msg = (err && (err.message || err.error || err.msg)) ? (err.message || err.error || err.msg) : 'שגיאה בשרת';
+      setErrors(prev => ({ ...prev, form: msg }));
       setIsLoading(false);
-      setSuccessMessage(isLogin ? 'התחברת בהצלחה! 🎉' : 'נרשמת בהצלחה! 🎉');
-      
-      // שמירה או מחיקה של אימייל ב-localStorage לפי "זכור אותי"
-      if (isLogin && formData.rememberMe) {
-        localStorage.setItem('rememberedEmail', formData.email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
-      }
-
-      // אם זה מצב הרשמה — מעבירים מיד לדף יצירת פרופיל מוזיקאי
-      // ברגע שההרשמה הושלמה בהצלחה
-      if (!isLogin) {
-        navigate('/musician/create');
-      }
-      
-      // איפוס הטופס אחרי 3 שניות
-      setTimeout(() => {
-        setSuccessMessage('');
-        resetForm();
-      }, 3000);
-    }, 2000);
+    }
   };
 
   // Function: איפוס כל שדות הטופס
@@ -309,6 +328,11 @@ const AuthForms = () => {
         {successMessage && (
           <div className="success-message">
             {successMessage}
+          </div>
+        )}
+        {errors.form && (
+          <div className="error-message form-error">
+            {errors.form}
           </div>
         )}
 

@@ -17,7 +17,9 @@ export default function CreateMusicianProfile() {
     experienceYears: '',
     eventTypes: '',
     bio: '',
-    location: ''
+    // change location to region: 'north' | 'center' | 'south' (keeps compatibility)
+    location: '',
+    region: ''
   });
 
   // רשימת סגנונות מוזיקליים לבחירה (ניתן לבחור יותר מאחד)
@@ -32,14 +34,65 @@ export default function CreateMusicianProfile() {
     'ישראלי'
   ];
 
+  // רשימת כלי נגינה - תואם לחיפוש ב-Home
+  const INSTRUMENT_OPTIONS = [
+    "גיטרה אקוסטית",
+    "גיטרה חשמלית",
+    "גיטרה בס",
+    "פסנתר",
+    "קלידים / אורגן",
+    "כינור",
+    "תופים",
+    "דרבוקה",
+    "קחון",
+    "טמבורין",
+    "בונגו",
+    "קונגה",
+    "תופי מרים",
+    "סקסופון",
+    "קלרינט",
+    "חצוצרה",
+    "טרומבון",
+    "חליל צד",
+    "חליל ערבי (ניי)",
+    "עוד",
+    "בוזוקי",
+    "קאנון",
+    "די.ג'יי",
+  ];
+
+  // רשימת סוגי אירועים - תואם לחיפוש ב-Home
+  const EVENT_OPTIONS = [
+    'חתונה',
+    'בר מצווה',
+    'שבת חתן',
+    'ברית',
+    'אירוע אירוסין',
+    'יום הולדת',
+    'חינה',
+    'אירוע משפחתי',
+    'אירוע חברה',
+    'טקס / כנס',
+    'מופע קהילתי',
+    'קבלת פנים',
+    'חפלה',
+    'שירה בציבור',
+    'הופעה חיה'
+  ];
+
   // state לשמירת סגנונות שנבחרו (מחרוזות)
   const [selectedStyles, setSelectedStyles] = useState([]);
   const [stylesError, setStylesError] = useState('');
+  // כלי נגינה וסוגי אירועים ניתנים לבחירה (מרובי ערכים)
+  const [selectedInstruments, setSelectedInstruments] = useState([]);
+  const [selectedEventTypes, setSelectedEventTypes] = useState([]);
 
   // state לקבצים והודעות סטטוס
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isStylesOpen, setIsStylesOpen] = useState(false);
+  const [isInstrumentsOpen, setIsInstrumentsOpen] = useState(false);
+  const [isEventsOpen, setIsEventsOpen] = useState(false);
   // ---------------------------------------------
   // Profile picture state (תמונת פרופיל)
   // - `profilePicture`: האובייקט File שהמשתמש בחר (או null אם לא נבחר)
@@ -93,10 +146,23 @@ export default function CreateMusicianProfile() {
     });
   };
 
+  const handleInstrumentToggle = (instr) => {
+    setSelectedInstruments(prev => prev.includes(instr) ? prev.filter(i=> i!==instr) : [...prev, instr]);
+  };
+
+  const handleEventToggle = (ev) => {
+    setSelectedEventTypes(prev => prev.includes(ev) ? prev.filter(e=> e!==ev) : [...prev, ev]);
+  };
+
   // סנכרן את בחירות הסגנונות לשדה form.musictype (שמירה/שליחה נוחה)
   useEffect(() => {
     setForm(prev => ({ ...prev, musictype: selectedStyles.join(', ') }));
   }, [selectedStyles]);
+
+  // סנכרן בחירות כלים וסוגי אירועים לשדות המתאימים ב-form
+  useEffect(() => {
+    setForm(prev => ({ ...prev, instrument: selectedInstruments.join(', '), eventTypes: selectedEventTypes.join(', ') }));
+  }, [selectedInstruments, selectedEventTypes]);
 
   // עזר המפריד רשימת ערכים המוזנת כמחרוזת מופרדת בפסיק
   const toArray = (s) => {
@@ -156,7 +222,9 @@ export default function CreateMusicianProfile() {
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsDropdownOpen(false);
+        setIsStylesOpen(false);
+        setIsInstrumentsOpen(false);
+        setIsEventsOpen(false);
       }
     };
     document.addEventListener('click', handleClickOutside);
@@ -248,8 +316,36 @@ export default function CreateMusicianProfile() {
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">כלי נגינה (instrument) *</label>
-              <input name="instrument" className="form-input" value={form.instrument} onChange={handleChange} required />
+              <label className="form-label">כלי נגינה (בחר/י אחד או יותר) *</label>
+              <div className="styles-dropdown" style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  className="dropdown-toggle"
+                  onClick={() => setIsInstrumentsOpen(prev => !prev)}
+                  aria-expanded={isInstrumentsOpen}
+                >
+                  {selectedInstruments.length === 0 ? 'בחר/י כלי נגינה...' : selectedInstruments.join(', ')}
+                </button>
+
+                {isInstrumentsOpen && (
+                  <div className="dropdown-list" style={{ position: 'absolute', zIndex: 50, background: '#fff', border: '1px solid #ddd', padding: 8, borderRadius: 6, maxHeight: 300, overflowY: 'auto' }}>
+                    {INSTRUMENT_OPTIONS.map(instr => (
+                      <label key={instr} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          name="instrument"
+                          value={instr}
+                          checked={selectedInstruments.includes(instr)}
+                          onChange={() => handleInstrumentToggle(instr)}
+                        />
+                        <span>{instr}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+              {stylesError && <div className="error-message">{stylesError}</div>}
             </div>
             <div className="form-group">
               <label className="form-label">סגנון מוזיקלי (ניתן לבחור יותר מאחד) *</label>
@@ -257,13 +353,12 @@ export default function CreateMusicianProfile() {
                 <button
                   type="button"
                   className="dropdown-toggle"
-                  onClick={() => setIsDropdownOpen(prev => !prev)}
-                  aria-expanded={isDropdownOpen}
+                  onClick={() => setIsStylesOpen(prev => !prev)}
+                  aria-expanded={isStylesOpen}
                 >
                   {selectedStyles.length === 0 ? 'בחר/י סגנונות...' : selectedStyles.join(', ')}
                 </button>
-
-                {isDropdownOpen && (
+                {isStylesOpen && (
                   <div className="dropdown-list" style={{ position: 'absolute', zIndex: 50, background: '#fff', border: '1px solid #ddd', padding: 8, borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
                     {musicStyles.map(style => (
                       <label key={style} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', cursor: 'pointer' }}>
@@ -291,8 +386,34 @@ export default function CreateMusicianProfile() {
               <input name="experienceYears" type="number" min="0" className="form-input" value={form.experienceYears} onChange={handleChange} />
             </div>
             <div className="form-group">
-              <label className="form-label">סוגי אירועים (מופרדים בפסיק)</label>
-              <input name="eventTypes" className="form-input" value={form.eventTypes} onChange={handleChange} placeholder="bar mizva, hatuna" />
+              <label className="form-label">סוגי אירועים (בחר/י)</label>
+              <div className="styles-dropdown" style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  className="dropdown-toggle"
+                  onClick={() => setIsEventsOpen(prev => !prev)}
+                  aria-expanded={isEventsOpen}
+                >
+                  {selectedEventTypes.length === 0 ? 'בחר/י סוגי אירועים...' : selectedEventTypes.join(', ')}
+                </button>
+                {isEventsOpen && (
+                  <div className="dropdown-list" style={{ position: 'absolute', zIndex: 50, background: '#fff', border: '1px solid #ddd', padding: 8, borderRadius: 6, maxHeight: 300, overflowY: 'auto' }}>
+                    {EVENT_OPTIONS.map(ev => (
+                      <label key={ev} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          name="eventTypes"
+                          value={ev}
+                          checked={selectedEventTypes.includes(ev)}
+                          onChange={() => handleEventToggle(ev)}
+                        />
+                        <span>{ev}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+              </div>
             </div>
           </div>
 
@@ -309,8 +430,16 @@ export default function CreateMusicianProfile() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">אזור/הופעות (מופרדים בפסיק)</label>
-            <input name="location" className="form-input" value={form.location} onChange={handleChange} placeholder="Tel Aviv" />
+            <label className="form-label">אזור/הופעות</label>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <select name="region" value={form.region} onChange={handleChange} className="form-input" style={{width:220}}>
+                <option value="">בחר אזור</option>
+                <option value="north">צפון</option>
+                <option value="center">מרכז</option>
+                <option value="south">דרום</option>
+              </select>
+              <input name="location" className="form-input" value={form.location} onChange={handleChange} placeholder="עיר/אזור מדויק (אופציונלי)" />
+            </div>
           </div>
 
           <div className="form-row">

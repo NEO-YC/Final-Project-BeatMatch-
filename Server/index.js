@@ -1,7 +1,9 @@
 const express=require('express');
 const mongoose=require('mongoose');
+const cors = require('cors');
 const app=express();
 app.use(express.json());
+app.use(cors());
 
 
 const uri = "mongodb+srv://david:Aa123456@cluster0.v1bla6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";

@@ -11,8 +11,9 @@ exports.register = async function (req, res) {
         
         // בדיקת תקינות הנתונים
         if (!firstname || !lastname || !email || !password || !birthday) {
+            // החזרת הודעה ידידותית למשתמש בעברית
             return res.status(400).json({ 
-                "message": "כל השדות נדרשים: firstname, lastname, email, password, birthday" 
+                "message": "אנא מלא/י את כל השדות המסומנים בכוכבית (שם פרטי, שם משפחה, אימייל, סיסמה ותאריך לידה)"
             });
         }
 
@@ -385,24 +386,42 @@ exports.getMusicianProfile = async function (req, res) {
 // חיפוש מוזיקאים לפי קריטריונים
 exports.searchMusicians = async function (req, res) {
     try {
-        const { musictype, location, instrument } = req.query;
+        // פרמטרים יכולים להגיע כ-array (repeated params) או כמחרוזת מופרדת בפסיקים
+        const { musictype, location, instrument, eventTypes, region } = req.query;
 
         // בניית query בסיסי - רק מוזיקאים
         let query = { isMusician: true };
 
-        // הוספת תנאי חיפוש לפי סוג מוזיקה
-        if (musictype) {
-            query['musicianProfile.musictype'] = new RegExp(musictype, 'i');
+        // עזר להמיר לפרמטרים רלוונטיים (array of strings)
+        const toArray = (v) => {א
+            if (!v) return [];
+            if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
+            return String(v).split(',').map(x => x.trim()).filter(Boolean);
+        };
+
+        // סוגי מוזיקה
+        const types = toArray(musictype);
+        if (types.length) {
+            query['musicianProfile.musictype'] = { $in: types.map(t => new RegExp(t, 'i')) };
         }
-        
-        // הוספת תנאי חיפוש לפי כלי נגינה
-        if (instrument) {
-            query['musicianProfile.instrument'] = new RegExp(instrument, 'i');
+
+        // כלי נגינה
+        const instruments = toArray(instrument);
+        if (instruments.length) {
+            query['musicianProfile.instrument'] = { $in: instruments.map(i => new RegExp(i, 'i')) };
         }
-        
-        // הוספת תנאי חיפוש לפי מיקום
-        if (location) {
-            query['musicianProfile.location'] = new RegExp(location, 'i');
+
+        // סוגי אירועים
+        const events = toArray(eventTypes);
+        if (events.length) {
+            query['musicianProfile.eventTypes'] = { $in: events.map(e => new RegExp(e, 'i')) };
+        }
+
+        // אזור/מיקום: אם נשלח region נשתמש בו, אחרת נתמוך ב-location חופשי
+        if (region) {
+            query['musicianProfile.region'] = new RegExp(String(region).trim(), 'i');
+        } else if (location) {
+            query['musicianProfile.location'] = new RegExp(String(location).trim(), 'i');
         }
 
         // ביצוע החיפוש ללא החזרת סיסמאות
