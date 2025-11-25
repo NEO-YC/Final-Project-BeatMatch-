@@ -117,8 +117,10 @@ const AuthForms = () => {
         const payload = { email: formData.email, password: formData.password, firstname: formData.firstName, lastname: formData.lastName, phone: formData.phone, birthday: formData.dateOfBirth };
         const res = await api.register(payload);
         // Show a brief success overlay animation and then navigate to login
+        // Do NOT store auth token on signup to avoid auto-login and unwanted redirects.
+        // Keep the user's name so the UI can show a friendly message, but require explicit login.
         if (res && res.token) {
-          localStorage.setItem('token', res.token);
+          // intentionally do not save token here
           localStorage.setItem('userName', `${formData.firstName} ${formData.lastName}`);
           window.dispatchEvent(new Event('storage'));
         } else {
