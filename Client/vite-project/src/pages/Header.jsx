@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 import "./Header.css"
 
 function Header() {
