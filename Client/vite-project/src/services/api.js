@@ -3,7 +3,9 @@ const BASE_URL = 'http://localhost:3000/user';
 
 async function request(path, options = {}) {
   const headers = options.headers ? { ...options.headers } : {};
-  if (!headers['Content-Type'] && !(options.body instanceof FormData)) {
+
+  // רק אם זה לא FormData ואין Content-Type - נוסיף application/json
+  if (!headers['Content-Type'] && !(options.body instanceof FormData) && options.skipContentType !== true) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -32,5 +34,23 @@ export function register(payload) {
 export function login(payload) {
   return request('/login', { method: 'POST', body: JSON.stringify(payload) });
 }
+export function updateMusicianProfile(payload) {
+  // אם payload הוא FormData (קבצים), לא צריך JSON.stringify
+  const body = payload instanceof FormData ? payload : JSON.stringify(payload);
+  const options = { 
+    method: 'PUT', 
+    body,
+    // אם זה FormData, הדפדפן יוסיף אוטומטית Content-Type עם boundary
+    skipContentType: payload instanceof FormData
+  };
+  
+  return request('/musician/profile', options);
+}
 
-export default { register, login };
+export function getMyMusicianProfile() {
+  // קבלת הפרופיל של המשתמש המחובר
+  return request('/me/musician-profile', { method: 'GET' });
+}
+
+
+export default { register, login, updateMusicianProfile, getMyMusicianProfile };

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './CreateMusicianProfile.css';
 
 // CreateMusicianProfile - רכיב יחיד ומלא ליצירת/עדכון פרופיל מוזיקאי
@@ -8,7 +10,7 @@ import './CreateMusicianProfile.css';
 // - אם יש קבצים נשלח FormData, אחרת נשלח JSON ל-API.
 // - ה-API כאן מכוון ל-'http://localhost:3000/user/musician/profile' (ניתן לשנות).
 export default function CreateMusicianProfile() {
-  // הערה: כרגע לא מבצעים הפניות אוטומטיות — הרכיב ויזואלי בלבד
+  // הערה: קומפוננטה ליצירת/עדכון פרופיל מוזיקאי
 
   // state של הטופס - שדות מרכזיים
   const [form, setForm] = useState({
@@ -107,12 +109,20 @@ export default function CreateMusicianProfile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-
+  const navigate = useNavigate();
   // refs לשדות קובץ (לא חובה אבל שימושי לאיפוס)
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
   const profileInputRef = useRef(null);
 
+  // בדיקת אימות - רק משתמש מחובר יכול ליצור פרופיל
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('עליך להתחבר כדי ליצור פרופיל מוזיקאי');
+      setTimeout(() => navigate('/authforms'), 1500);
+    }
+  }, [navigate]);
   // --------------------------------------------------
   // הערות על ה-ref:
   // - `profileInputRef` מצביע על input[type=file] שהסתרנו (display:none).
@@ -231,245 +241,197 @@ export default function CreateMusicianProfile() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // שליחת הטופס - בונה את הבקשה לפי האם קיימים קבצים
-  // Handler פשוט לשמירה ויזואלית בלבד (ללא קריאות לשרת)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    // ודא שנבחר לפחות סגנון מוזיקלי אחד
-    if (!selectedStyles || selectedStyles.length === 0) {
-      setStylesError('בחר/י לפחות סגנון מוזיקלי אחד');
-      setLoading(false);
-      return;
-    }
+    const handleSubmit = async (e) => {
+      e.preventDefault();
 
-    try {
-      // סימולציה קצרה של שמירה מקומית (למטרות ויזואליות בלבד)
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      setSuccess('הפרופיל נשמר (מקומי)');
-      // לא מבצעים שום fetch או הפניה — רק תצוגה
-    } catch (err) {
-      setError('שגיאה מקומית');
-    } finally {
-      setLoading(false);
-    }
-  };
+      setError(null);
+      setSuccess(null);
 
-  return (
-    <div className="auth-container" style={{background:'linear-gradient(135deg,#f0f4ff, #fbf7ff)'}}>
-      <div className="auth-card" style={{maxWidth:800}} dir="rtl">
-        <div className="auth-header">
-          <h1 className="auth-title" style={{background:'none',WebkitTextFillColor:'#333',color:'#333'}}>צור פרופיל מוזיקאי</h1>
-          <p className="auth-subtitle">מלא/י את הפרטים כדי להציג את עצמך באתר</p>
-        </div>
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('עליך להתחבר כדי ליצור פרופיל');
+        setTimeout(() => navigate('/authforms'), 1200);
+        return;
+      }
 
-        {/* Upload profile picture - העיגול עם תמונה/אייקון מעל הטופס */}
-        {/* כיתוב מעל המעגל: תווית ברורה עבור שדה תמונת פרופיל */}
-        <div className="profile-label">תמונת פרופיל</div>
-        <div className="profile-uploader">
-          <input
-            ref={profileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleProfilePicture}
-          />
-          <div
-            className="profile-preview"
-            onClick={() => profileInputRef.current && profileInputRef.current.click()}
-            role="button"
-            title="לחץ להעלאת תמונת פרופיל"
-          >
-            {profilePreview ? (
-              <img src={profilePreview} alt="profile preview" />
-            ) : (
-              <div className="profile-placeholder">+</div>
-            )}
-          </div>
-        </div>
-        {/* טקסט עזר מתחת לעיגול שמסביר את הפעולה למשתמש */}
-        <div className="profile-hint">לחץ על העיגול כדי להוסיף או לשנות תמונת פרופיל</div>
+      if (!selectedStyles || selectedStyles.length === 0) {
+        setStylesError('בחר/י לפחות סגנון מוזיקלי אחד');
+        return;
+      }
 
-        {/* כפתור להסרת תמונת פרופיל - נראה רק כאשר יש תמונה */}
-        {profilePicture && (
-          <div className="action-row" style={{ justifyContent: 'center', marginTop: 8 }}>
-            <button
-              type="button"
-              className="profile-remove-btn"
-              onClick={() => {
-                // נקה את ה-state ואת ה-preview וגם איפס את ה-input
-                if (profilePreview) {
-                  URL.revokeObjectURL(profilePreview);
-                }
-                setProfilePicture(null);
-                setProfilePreview(null);
-                if (profileInputRef && profileInputRef.current) profileInputRef.current.value = null;
-              }}
-            >הסר תמונה</button>
-          </div>
-        )}
+      if (!selectedInstruments || selectedInstruments.length === 0) {
+        setError('בחר/י לפחות כלי נגינה אחד');
+        return;
+      }
 
-        {error && <div className="success-message" style={{background:'#ffdede', color:'#a00000'}}>{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+      setLoading(true);
+      try {
+        const locationArray = [];
+        if (form.region) locationArray.push(form.region);
+        if (form.location) locationArray.push(form.location);
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">כלי נגינה (בחר/י אחד או יותר) *</label>
-              <div className="styles-dropdown" style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  className="dropdown-toggle"
-                  onClick={() => setIsInstrumentsOpen(prev => !prev)}
-                  aria-expanded={isInstrumentsOpen}
-                >
-                  {selectedInstruments.length === 0 ? 'בחר/י כלי נגינה...' : selectedInstruments.join(', ')}
-                </button>
+        const payload = {
+          instrument: form.instrument || selectedInstruments.join(', '),
+          musictype: form.musictype || selectedStyles.join(', '),
+          experienceYears: form.experienceYears || '0',
+          eventTypes: form.eventTypes ? form.eventTypes.split(',').map(x => x.trim()).filter(Boolean) : selectedEventTypes,
+          bio: form.bio || '',
+          location: locationArray,
+          profilePicture: profilePreview || '',
+          galleryPictures: images.map(f => f.name || ''),
+          galleryVideos: videos.map(f => f.name || '')
+        };
 
-                {isInstrumentsOpen && (
-                  <div className="dropdown-list" style={{ position: 'absolute', zIndex: 50, background: '#fff', border: '1px solid #ddd', padding: 8, borderRadius: 6, maxHeight: 300, overflowY: 'auto' }}>
-                    {INSTRUMENT_OPTIONS.map(instr => (
-                      <label key={instr} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          name="instrument"
-                          value={instr}
-                          checked={selectedInstruments.includes(instr)}
-                          onChange={() => handleInstrumentToggle(instr)}
-                        />
-                        <span>{instr}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+        const res = await api.updateMusicianProfile(payload);
+        setSuccess(res && (res.message || 'הפרופיל נשמר בהצלחה!'));
+      } catch (err) {
+        console.error(err);
+        const msg = err && (err.message || err.error) ? (err.message || err.error) : 'שגיאה בשמירת הפרופיל';
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-              </div>
-              {stylesError && <div className="error-message">{stylesError}</div>}
+    return (
+      <div className="create-musician-page">
+        <div className="container">
+          <h2>צור או עדכן פרופיל מוזיקאי</h2>
+
+          {profilePicture && (
+            <div className="action-row" style={{ justifyContent: 'center', marginTop: 8 }}>
+              <button
+                type="button"
+                className="profile-remove-btn"
+                onClick={() => {
+                  if (profilePreview) URL.revokeObjectURL(profilePreview);
+                  setProfilePicture(null);
+                  setProfilePreview(null);
+                  if (profileInputRef && profileInputRef.current) profileInputRef.current.value = null;
+                }}
+              >הסר תמונה</button>
             </div>
-            <div className="form-group">
-              <label className="form-label">סגנון מוזיקלי (ניתן לבחור יותר מאחד) *</label>
-              <div className="styles-dropdown" style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  className="dropdown-toggle"
-                  onClick={() => setIsStylesOpen(prev => !prev)}
-                  aria-expanded={isStylesOpen}
-                >
-                  {selectedStyles.length === 0 ? 'בחר/י סגנונות...' : selectedStyles.join(', ')}
-                </button>
-                {isStylesOpen && (
-                  <div className="dropdown-list" style={{ position: 'absolute', zIndex: 50, background: '#fff', border: '1px solid #ddd', padding: 8, borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
-                    {musicStyles.map(style => (
-                      <label key={style} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          name="musictype"
-                          value={style}
-                          checked={selectedStyles.includes(style)}
-                          onChange={() => handleStyleToggle(style)}
-                        />
-                        <span>{style}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+          )}
 
-              </div>
-              {stylesError && <div className="error-message">{stylesError}</div>}
-            </div>
-          </div>
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">שנות ניסיון</label>
-              <input name="experienceYears" type="number" min="0" className="form-input" value={form.experienceYears} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">סוגי אירועים (בחר/י)</label>
-              <div className="styles-dropdown" style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  className="dropdown-toggle"
-                  onClick={() => setIsEventsOpen(prev => !prev)}
-                  aria-expanded={isEventsOpen}
-                >
-                  {selectedEventTypes.length === 0 ? 'בחר/י סוגי אירועים...' : selectedEventTypes.join(', ')}
-                </button>
-                {isEventsOpen && (
-                  <div className="dropdown-list" style={{ position: 'absolute', zIndex: 50, background: '#fff', border: '1px solid #ddd', padding: 8, borderRadius: 6, maxHeight: 300, overflowY: 'auto' }}>
-                    {EVENT_OPTIONS.map(ev => (
-                      <label key={ev} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          name="eventTypes"
-                          value={ev}
-                          checked={selectedEventTypes.includes(ev)}
-                          onChange={() => handleEventToggle(ev)}
-                        />
-                        <span>{ev}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-
-              </div>
-            </div>
-          </div>
-
-          <div className="form-group">
-              <label className="form-label">ביוגרפיה</label>
-              {/* שדה ביוגרפיה - מוגבל ל-250 תווים. הצגתי גם ספירת מילים/תווים מחושבת */}
-              <div style={{ position: 'relative' }}>
-                <textarea name="bio" className="form-input" rows={4} value={form.bio} onChange={handleChange} />
-                <div className="bio-counter">
-                  {/* תצוגת תווים בשימוש: 'X / 250' בצד שמאל-תחתון */}
-                  <span>{(form.bio ? form.bio.length : 0)} / 250</span>
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">כלי נגינה (בחר/י אחד או יותר) *</label>
+                <div className="styles-dropdown" style={{ position: 'relative' }}>
+                  <button type="button" className="dropdown-toggle" onClick={() => setIsInstrumentsOpen(p => !p)}>
+                    {selectedInstruments.length === 0 ? 'בחר/י כלי נגינה...' : selectedInstruments.join(', ')}
+                  </button>
+                  {isInstrumentsOpen && (
+                    <div className="dropdown-list">
+                      {INSTRUMENT_OPTIONS.map(instr => (
+                        <label key={instr} className="dropdown-item">
+                          <input type="checkbox" checked={selectedInstruments.includes(instr)} onChange={() => handleInstrumentToggle(instr)} />
+                          <span>{instr}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label">אזור/הופעות</label>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <select name="region" value={form.region} onChange={handleChange} className="form-input" style={{width:220}}>
-                <option value="">בחר אזור</option>
-                <option value="north">צפון</option>
-                <option value="center">מרכז</option>
-                <option value="south">דרום</option>
-              </select>
-              <input name="location" className="form-input" value={form.location} onChange={handleChange} placeholder="עיר/אזור מדויק (אופציונלי)" />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">הוספת תמונות הופעה (תמיכה בקבצים מרובים)</label>
-              <div className="file-input-wrapper">
-                <label className="file-trigger file-action-btn">
-                  <input ref={imageInputRef} className="hidden-file-input" type="file" accept="image/*" multiple onChange={handleImages} />
-                  <span>בחר תמונות</span>
-                </label>
+              <div className="form-group">
+                <label className="form-label">סגנון מוזיקלי (ניתן לבחור יותר מאחד) *</label>
+                <div className="styles-dropdown" style={{ position: 'relative' }}>
+                  <button type="button" className="dropdown-toggle" onClick={() => setIsStylesOpen(p => !p)}>
+                    {selectedStyles.length === 0 ? 'בחר/י סגנונות...' : selectedStyles.join(', ')}
+                  </button>
+                  {isStylesOpen && (
+                    <div className="dropdown-list">
+                      {musicStyles.map(style => (
+                        <label key={style} className="dropdown-item">
+                          <input type="checkbox" checked={selectedStyles.includes(style)} onChange={() => handleStyleToggle(style)} />
+                          <span>{style}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {stylesError && <div className="error-message">{stylesError}</div>}
+                </div>
               </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">הוספת סרטונים (וידאו)</label>
-              <div className="file-input-wrapper">
-                <label className="file-trigger file-action-btn">
-                  <input ref={videoInputRef} className="hidden-file-input" type="file" accept="video/*" multiple onChange={handleVideos} />
-                  <span>בחר סרטונים</span>
-                </label>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">שנות ניסיון</label>
+                <input name="experienceYears" type="number" min="0" className="form-input" value={form.experienceYears} onChange={handleChange} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">סוגי אירועים (בחר/י)</label>
+                <div className="styles-dropdown" style={{ position: 'relative' }}>
+                  <button type="button" className="dropdown-toggle" onClick={() => setIsEventsOpen(p => !p)}>
+                    {selectedEventTypes.length === 0 ? 'בחר/י סוגי אירועים...' : selectedEventTypes.join(', ')}
+                  </button>
+                  {isEventsOpen && (
+                    <div className="dropdown-list">
+                      {EVENT_OPTIONS.map(ev => (
+                        <label key={ev} className="dropdown-item">
+                          <input type="checkbox" checked={selectedEventTypes.includes(ev)} onChange={() => handleEventToggle(ev)} />
+                          <span>{ev}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="action-row">
-            <button type="submit" className={`submit-button ${loading ? 'loading' : ''}`} disabled={loading}>
-              {loading ? <span className="loader"/> : 'שמור פרופיל'}
-            </button>
-          </div>
-        </form>
+            <div className="form-group">
+              <label className="form-label">ביוגרפיה</label>
+              <textarea name="bio" className="form-input" rows={4} value={form.bio} onChange={handleChange} />
+              <div className="bio-counter"><span>{(form.bio ? form.bio.length : 0)} / 250</span></div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">אזור/הופעות</label>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <select name="region" value={form.region} onChange={handleChange} className="form-input" style={{width:220}}>
+                  <option value="">בחר אזור</option>
+                  <option value="north">צפון</option>
+                  <option value="center">מרכז</option>
+                  <option value="south">דרום</option>
+                </select>
+                <input name="location" className="form-input" value={form.location} onChange={handleChange} placeholder="עיר/אזור מדויק (אופציונלי)" />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">הוספת תמונות הופעה (תמיכה בקבצים מרובים)</label>
+                <div className="file-input-wrapper">
+                  <label className="file-trigger file-action-btn">
+                    <input ref={imageInputRef} className="hidden-file-input" type="file" accept="image/*" multiple onChange={handleImages} />
+                    <span>בחר תמונות</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">הוספת סרטונים (וידאו)</label>
+                <div className="file-input-wrapper">
+                  <label className="file-trigger file-action-btn">
+                    <input ref={videoInputRef} className="hidden-file-input" type="file" accept="video/*" multiple onChange={handleVideos} />
+                    <span>בחר סרטונים</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="action-row">
+              <button type="submit" className={`submit-button ${loading ? 'loading' : ''}`} disabled={loading}>
+                {loading ? <span className="loader"/> : 'שמור פרופיל'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
-  );
+    );
 }
