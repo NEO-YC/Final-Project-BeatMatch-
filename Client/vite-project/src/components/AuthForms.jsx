@@ -14,6 +14,7 @@ const AuthForms = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showSignupOverlay, setShowSignupOverlay] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
@@ -115,16 +116,23 @@ const AuthForms = () => {
       } else {
         const payload = { email: formData.email, password: formData.password, firstname: formData.firstName, lastname: formData.lastName, phone: formData.phone, birthday: formData.dateOfBirth };
         const res = await api.register(payload);
+        // Show a brief success overlay animation and then navigate to login
         if (res && res.token) {
           localStorage.setItem('token', res.token);
           localStorage.setItem('userName', `${formData.firstName} ${formData.lastName}`);
           window.dispatchEvent(new Event('storage'));
-          setSuccessMessage('נרשמת בהצלחה! מעביר אותך ליצירת פרופיל... 🎉'); setIsLoading(false); setTimeout(() => navigate('/musician/create'), 1500);
         } else {
           localStorage.setItem('userName', `${formData.firstName} ${formData.lastName}`);
           window.dispatchEvent(new Event('storage'));
-          setSuccessMessage('נרשמת בהצלחה! מעביר אותך ליצירת פרופיל...'); setIsLoading(false); setTimeout(() => navigate('/musician/create'), 1500);
         }
+        setSuccessMessage('נרשמת בהצלחה!');
+        setIsLoading(false);
+        setShowSignupOverlay(true);
+        // keep overlay briefly then go to login to avoid flashing other routes
+        setTimeout(() => {
+          setShowSignupOverlay(false);
+          navigate('/authforms');
+        }, 1000);
       }
     } catch (err) {
       console.error('Auth error:', err);
@@ -521,6 +529,16 @@ const AuthForms = () => {
             <div className="modal-footer">
               <button className="modal-button" onClick={() => setShowPrivacyModal(false)}>הבנתי</button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Signup success overlay */}
+      {showSignupOverlay && (
+        <div className="signup-overlay" role="status" aria-live="polite">
+          <div className="signup-card">
+            <div className="signup-check">✓</div>
+            <div className="signup-text">נרשמת בהצלחה!</div>
+            <div style={{fontSize:12,color:'#666'}}>מעבר לעמוד ההתחברות...</div>
           </div>
         </div>
       )}

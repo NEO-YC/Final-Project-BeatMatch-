@@ -595,6 +595,48 @@
   }
 }
 
+/* Signup success overlay */
+.signup-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 1200;
+}
+.signup-card {
+  background: white;
+  padding: 28px 36px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  animation: popIn 0.28s ease-out;
+}
+@keyframes popIn {
+  from { transform: scale(0.92); opacity: 0 }
+  to { transform: scale(1); opacity: 1 }
+}
+.signup-check {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#11998e 0%,#38ef7d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 34px;
+  box-shadow: 0 8px 26px rgba(17,153,142,0.3);
+}
+.signup-text {
+  font-weight: 700;
+  color: #333;
+}
+
 .form-group {
   animation: fadeIn 0.3s ease-out;
 }
