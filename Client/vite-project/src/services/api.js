@@ -52,5 +52,13 @@ export function getMyMusicianProfile() {
   return request('/me/musician-profile', { method: 'GET' });
 }
 
+export function uploadFile(file, options = {}) {
+  const fd = new FormData();
+  fd.append('file', file);
+  // optional save hint (e.g. 'profile' or 'gallery') — server will use it to persist URLs
+  if (options.save) fd.append('save', options.save);
+  return request('/upload', { method: 'POST', body: fd, skipContentType: true });
+}
 
-export default { register, login, updateMusicianProfile, getMyMusicianProfile };
+
+export default { register, login, updateMusicianProfile, getMyMusicianProfile, uploadFile };

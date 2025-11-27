@@ -276,22 +276,24 @@ export default function CreateMusicianProfile() {
         let uploadedVideos = [];
         const token = localStorage.getItem('token');
 
-        try {
-          if (profilePicture) {
-            const up = await api.uploadFile(profilePicture);
-            profileUrl = up && up.url ? up.url : '';
-          }
+          try {
+            if (profilePicture) {
+              // tell server to save this URL as the profile picture
+              const up = await api.uploadFile(profilePicture, { save: 'profile' });
+              profileUrl = up && up.url ? up.url : '';
+            }
 
-          if (images && images.length) {
-            const imgPromises = images.map(f => api.uploadFile(f).then(r => r.url));
-            uploadedImages = (await Promise.all(imgPromises)).filter(Boolean);
-          }
+            if (images && images.length) {
+              // upload images and ask server to save each to gallery
+              const imgPromises = images.map(f => api.uploadFile(f, { save: 'gallery' }).then(r => r.url));
+              uploadedImages = (await Promise.all(imgPromises)).filter(Boolean);
+            }
 
-          if (videos && videos.length) {
-            const vidPromises = videos.map(f => api.uploadFile(f).then(r => r.url));
-            uploadedVideos = (await Promise.all(vidPromises)).filter(Boolean);
-          }
-        } catch (upErr) {
+            if (videos && videos.length) {
+              const vidPromises = videos.map(f => api.uploadFile(f, { save: 'gallery' }).then(r => r.url));
+              uploadedVideos = (await Promise.all(vidPromises)).filter(Boolean);
+            }
+          } catch (upErr) {
           console.error('Upload failed:', upErr);
           setError('שגיאה בהעלאת קבצים');
           setLoading(false);
