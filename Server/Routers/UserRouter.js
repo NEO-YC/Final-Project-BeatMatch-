@@ -9,6 +9,8 @@ const {
     register, 
     login,
     updateMusicianProfile,
+    uploadToCloudinary,
+    getUploadSignature,
     updateAvailability,
     getMusicianProfile,
     searchMusicians
@@ -18,6 +20,8 @@ const {
 
 // distructure the authentication middleware
 const { authenticateToken } = require('../Middlewear/Middlewear');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 
 
@@ -37,6 +41,10 @@ router.get('/musicians/:userId', getMusicianProfile);
 // נתיבים מאובטחים (דורשים אימות JWT)
 router.put('/musician/profile', authenticateToken, updateMusicianProfile);
 router.put('/musician/availability', authenticateToken, updateAvailability);
+// Get Cloudinary upload signature
+router.get('/upload-signature', authenticateToken, getUploadSignature);
+// upload single file to Cloudinary (authenticated)
+router.post('/upload', authenticateToken, upload.single('file'), uploadToCloudinary);
 
 // קבלת הפרופיל שלי (המשתמש המחובר)
 router.get('/me/musician-profile', authenticateToken, getMusicianProfile);

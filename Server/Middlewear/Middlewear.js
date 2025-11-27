@@ -23,7 +23,7 @@ exports.authenticateToken = async (req, res, next) => {
 
 
 
-        const jwtSecret = process.env.JWT_SECRET || 'secret-key-change-in-production';
+        const jwtSecret = process.env.JWT_SECRET;
 
 
 

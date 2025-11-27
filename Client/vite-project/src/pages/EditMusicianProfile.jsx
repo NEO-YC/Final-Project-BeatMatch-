@@ -307,25 +307,56 @@ export default function EditMusicianProfile() {
     }
 
     try {
-      // בניית location array - אם יש region או location מסוים
-      const locationArray = [];
-      if (form.region) locationArray.push(form.region);
-      if (form.location) locationArray.push(form.location);
-      
-      const payload = {
-        instrument: form.instrument,
-        musictype: form.musictype,
-        experienceYears: form.experienceYears || '0',
-        eventTypes: form.eventTypes ? form.eventTypes.split(',').map(e => e.trim()).filter(Boolean) : [],
-        bio: form.bio || '',
-        location: locationArray,
-        profilePicture: profilePreview || '',
-        galleryPictures: [],
-        galleryVideos: []
-      };
-      
-      const res = await api.updateMusicianProfile(payload);
-      setSuccess(res.message || 'הפרופיל עודכן בהצלחה! 🎉');
+        // בניית location array - אם יש region או location מסוים
+        const locationArray = [];
+        if (form.region) locationArray.push(form.region);
+        if (form.location) locationArray.push(form.location);
+
+        // If the user selected new files (profilePicture/images/videos), upload them first
+        let profileUrl = '';
+        let uploadedImages = [];
+        let uploadedVideos = [];
+        try {
+          if (profilePicture) {
+            const up = await api.uploadFile(profilePicture, { save: 'profile' });
+            profileUrl = up && up.url ? up.url : '';
+          }
+
+          if (images && images.length) {
+            const imgPromises = images.map(f => api.uploadFile(f, { save: 'gallery' }).then(r => r.url));
+            uploadedImages = (await Promise.all(imgPromises)).filter(Boolean);
+          }
+
+          if (videos && videos.length) {
+            const vidPromises = videos.map(f => api.uploadFile(f, { save: 'gallery' }).then(r => r.url));
+            uploadedVideos = (await Promise.all(vidPromises)).filter(Boolean);
+          }
+        } catch (upErr) {
+          console.error('Upload failed:', upErr);
+          setError('שגיאה בהעלאת קבצים');
+          setLoading(false);
+          return;
+        }
+
+        // Decide final profile picture URL:
+        // prefer newly uploaded URL; if not uploaded, keep existing http URL (from server),
+        // otherwise send empty string (avoid saving blob: URLs)
+        const finalProfileUrl = profileUrl || (profilePreview && typeof profilePreview === 'string' && profilePreview.startsWith('http') ? profilePreview : '');
+
+        const payload = {
+          instrument: form.instrument,
+          musictype: form.musictype,
+          experienceYears: form.experienceYears || '0',
+          eventTypes: form.eventTypes ? form.eventTypes.split(',').map(e => e.trim()).filter(Boolean) : [],
+          bio: form.bio || '',
+          location: locationArray,
+          profilePicture: finalProfileUrl,
+          galleryPictures: uploadedImages,
+          galleryVideos: uploadedVideos
+        };
+
+        const res = await api.updateMusicianProfile(payload);
+        setSuccess(res.message || 'הפרופיל עודכן בהצלחה! 🎉');
       
       // חזרה לדף הבית או לפרופיל אחרי 2 שניות
       setTimeout(() => navigate('/'), 2000);

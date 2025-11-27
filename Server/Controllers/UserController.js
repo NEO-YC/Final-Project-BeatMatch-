@@ -5,6 +5,12 @@ const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
 // configure cloudinary using env vars (values kept in Server/.env locally)
+console.log('🔧 Cloudinary Config Debug:');
+console.log('Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
+console.log('API Key:', process.env.CLOUDINARY_API_KEY);
+console.log('API Secret length:', process.env.CLOUDINARY_API_SECRET ? process.env.CLOUDINARY_API_SECRET.length : 0);
+console.log('API Secret (first 5 chars):', process.env.CLOUDINARY_API_SECRET ? process.env.CLOUDINARY_API_SECRET.substring(0, 5) : 'MISSING');
+
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
     api_key: process.env.CLOUDINARY_API_KEY || '',
@@ -136,7 +142,7 @@ exports.login = async function (req, res) {
 
 
          // יצירת JWT token
-        const jwtSecret = process.env.JWT_SECRET || 'secret-key-change-in-production';
+        const jwtSecret = process.env.JWT_SECRET;
         const token = jwt.sign(
             { 
                 userId: user._id,
@@ -262,17 +268,106 @@ exports.updateMusicianProfile = async function (req, res) {
     }
 };
 
-// Upload a single file (from multer memoryStorage) to Cloudinary
+// Get Cloudinary signature for client-side upload
+exports.getUploadSignature = async function (req, res) {
+    try {
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+            return res.status(500).json({ message: 'Cloudinary not configured' });
+        }
+
+        const timestamp = Math.round(Date.now() / 1000);
+        const folder = 'final-project';
+        
+        // Create params for signature - ONLY these params, nothing more
+        const paramsToSign = {
+            timestamp: timestamp,
+            folder: folder
+        };
+
+        // Generate signature using Cloudinary's method
+        const signature = cloudinary.utils.api_sign_request(
+            paramsToSign,
+            process.env.CLOUDINARY_API_SECRET
+        );
+
+        console.log('✍️ Generated signature:', { timestamp, folder, signature: signature.substring(0, 10) + '...' });
+
+        res.status(200).json({
+            timestamp,
+            signature,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            folder
+        });
+    } catch (error) {
+        console.error('Signature generation error:', error);
+        res.status(500).json({ message: 'Failed to generate signature', error: error.message });
+    }
+};
+
+// Upload a single file (from multer memoryStorage) to Cloudinary OR save already-uploaded URL
 exports.uploadToCloudinary = async function (req, res) {
     try {
+        // Check if this is a save-URL request (client already uploaded to Cloudinary)
+        if (req.body && req.body.url && req.body.save) {
+            const { url, public_id, save: saveHint } = req.body;
+            
+            let persistedProfile = null;
+            if (saveHint && req.userId) {
+                try {
+                    const user = await User.findById(req.userId);
+                    if (user) {
+                        if (!Array.isArray(user.musicianProfile)) user.musicianProfile = [];
+                        if (user.musicianProfile.length === 0) {
+                            user.musicianProfile.push({ profilePicture: '', galleryPictures: [], galleryVideos: [], availability: [] });
+                        }
+                        const profile = user.musicianProfile[0];
+                        if (saveHint === 'profile') {
+                            profile.profilePicture = url;
+                        } else if (saveHint === 'gallery') {
+                            if (!Array.isArray(profile.galleryPictures)) profile.galleryPictures = [];
+                            profile.galleryPictures.push(url);
+                        }
+                        await user.save();
+                        persistedProfile = user.musicianProfile[0];
+                        console.log('✅ Saved URL to profile:', { saveHint, url: url.substring(0, 50) });
+                    }
+                } catch (errSave) {
+                    console.error('Failed to persist URL:', errSave);
+                }
+            }
+            
+            const responsePayload = { url, public_id };
+            if (persistedProfile) responsePayload.musicianProfile = persistedProfile;
+            return res.status(200).json(responsePayload);
+        }
+        
+        // Original upload flow (if file buffer present)
         if (!req.file || !req.file.buffer) {
             return res.status(400).json({ message: 'No file uploaded' });
         }
+        // Check Cloudinary credentials early and return a helpful error
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+            console.error('Cloudinary env vars missing');
+            return res.status(500).json({ message: 'Cloudinary not configured on server. Please set CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET in .env' });
+        }
+        
+        console.log('📤 Starting upload to Cloudinary...');
+        console.log('File mimetype:', req.file.mimetype);
+        console.log('File size:', req.file.size);
+        
         const result = await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
-                { folder: 'final-project' },
+                { 
+                    folder: 'final-project', 
+                    resource_type: 'auto'
+                },
                 (error, result) => {
-                    if (error) return reject(error);
+                    if (error) {
+                        console.error('❌ Cloudinary upload error:', error);
+                        return reject(error);
+                    }
+                    console.log('✅ Upload successful:', result.secure_url);
                     resolve(result);
                 }
             );
@@ -281,6 +376,7 @@ exports.uploadToCloudinary = async function (req, res) {
 
         // If the client sent a "save" hint (FormData field), persist the URL into the user's musicianProfile
         const saveHint = (req.body && req.body.save) || (req.query && req.query.save) || null;
+        let persistedProfile = null;
         if (saveHint && req.userId) {
             try {
                 const user = await User.findById(req.userId);
@@ -297,13 +393,17 @@ exports.uploadToCloudinary = async function (req, res) {
                         profile.galleryPictures.push(result.secure_url);
                     }
                     await user.save();
+                    persistedProfile = user.musicianProfile[0];
                 }
             } catch (errSave) {
                 console.error('Failed to persist uploaded URL to user profile:', errSave);
             }
         }
 
-        res.status(200).json({ url: result.secure_url, public_id: result.public_id });
+        const responsePayload = { url: result.secure_url, public_id: result.public_id };
+        if (persistedProfile) responsePayload.musicianProfile = persistedProfile;
+
+        res.status(200).json(responsePayload);
     } catch (error) {
         console.error('Cloudinary upload error:', error);
         res.status(500).json({ message: 'שגיאה בהעלאת קובץ', error: error.message });

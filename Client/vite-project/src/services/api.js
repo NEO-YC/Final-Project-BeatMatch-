@@ -52,12 +52,46 @@ export function getMyMusicianProfile() {
   return request('/me/musician-profile', { method: 'GET' });
 }
 
-export function uploadFile(file, options = {}) {
+export async function uploadFile(file, options = {}) {
+  // Step 1: Get signature from our server
+  const signatureData = await request('/upload-signature', { method: 'GET' });
+  
+  // Step 2: Upload directly to Cloudinary with the signed params
   const fd = new FormData();
   fd.append('file', file);
-  // optional save hint (e.g. 'profile' or 'gallery') — server will use it to persist URLs
-  if (options.save) fd.append('save', options.save);
-  return request('/upload', { method: 'POST', body: fd, skipContentType: true });
+  fd.append('timestamp', signatureData.timestamp);
+  fd.append('signature', signatureData.signature);
+  fd.append('api_key', signatureData.api_key);
+  fd.append('folder', signatureData.folder);
+  
+  // Upload directly to Cloudinary
+  const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloud_name}/auto/upload`;
+  const uploadRes = await fetch(cloudinaryUrl, {
+    method: 'POST',
+    body: fd
+  });
+  
+  if (!uploadRes.ok) {
+    const errorData = await uploadRes.json();
+    throw new Error(errorData.error?.message || 'Upload failed');
+  }
+  
+  const result = await uploadRes.json();
+  
+  // Step 3: If save hint provided, save the URL to the user profile
+  if (options.save && result.secure_url) {
+    const savePayload = {
+      url: result.secure_url,
+      public_id: result.public_id,
+      save: options.save
+    };
+    await request('/upload', { 
+      method: 'POST', 
+      body: JSON.stringify(savePayload)
+    });
+  }
+  
+  return { url: result.secure_url, public_id: result.public_id };
 }
 
 
