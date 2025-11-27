@@ -54,6 +54,8 @@ const SUGGESTED_EVENTS = [
 ];
 
 export default function Home(){
+  console.log("test branch");
+  
   const [query, setQuery] = useState(''); // חיפוש חופשי (מחפש גם ב-location)
 
   const [instrumentInput, setInstrumentInput] = useState('');
