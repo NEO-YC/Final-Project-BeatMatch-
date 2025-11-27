@@ -305,7 +305,8 @@ export default function CreateMusicianProfile() {
           eventTypes: form.eventTypes ? form.eventTypes.split(',').map(x => x.trim()).filter(Boolean) : selectedEventTypes,
           bio: form.bio || '',
           location: locationArray,
-          profilePicture: profileUrl || profilePreview || '',
+          // only use the uploaded URL; do NOT store blob: object URLs
+          profilePicture: profileUrl && typeof profileUrl === 'string' && profileUrl.startsWith('http') ? profileUrl : '',
           galleryPictures: uploadedImages,
           galleryVideos: uploadedVideos
         };
@@ -325,21 +326,44 @@ export default function CreateMusicianProfile() {
       <div className="create-musician-page">
         <div className="container">
           <h2>צור או עדכן פרופיל מוזיקאי</h2>
-
-          {profilePicture && (
-            <div className="action-row" style={{ justifyContent: 'center', marginTop: 8 }}>
-              <button
-                type="button"
-                className="profile-remove-btn"
-                onClick={() => {
-                  if (profilePreview) URL.revokeObjectURL(profilePreview);
-                  setProfilePicture(null);
-                  setProfilePreview(null);
-                  if (profileInputRef && profileInputRef.current) profileInputRef.current.value = null;
-                }}
-              >הסר תמונה</button>
+            {/* Profile uploader (click the circle to open file dialog) */}
+            <div className="profile-label">תמונת פרופיל</div>
+            <div className="profile-uploader">
+              <input
+                ref={profileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleProfilePicture}
+              />
+              <div
+                className="profile-preview"
+                onClick={() => profileInputRef.current && profileInputRef.current.click()}
+                role="button"
+                title="לחץ להעלאת תמונת פרופיל"
+              >
+                {profilePreview ? (
+                  // if preview is an http(s) url we show it, if it's a blob too — show it too for immediate feedback
+                  <img src={profilePreview} alt="profile preview" />
+                ) : (
+                  <div className="profile-placeholder">+</div>
+                )}
+              </div>
             </div>
-          )}
+            {profilePicture && (
+              <div className="action-row" style={{ justifyContent: 'center', marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="profile-remove-btn"
+                  onClick={() => {
+                    if (profilePreview && profilePreview.startsWith('blob:')) URL.revokeObjectURL(profilePreview);
+                    setProfilePicture(null);
+                    setProfilePreview(null);
+                    if (profileInputRef && profileInputRef.current) profileInputRef.current.value = null;
+                  }}
+                >הסר תמונה</button>
+              </div>
+            )}
 
           {error && <div className="error-message">{error}</div>}
           {success && <div className="success-message">{success}</div>}
