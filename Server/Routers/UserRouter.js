@@ -13,7 +13,8 @@ const {
     getUploadSignature,
     updateAvailability,
     getMusicianProfile,
-    searchMusicians
+    searchMusicians,
+    deleteUser
 } = require('../Controllers/UserController');
 
 
@@ -48,6 +49,9 @@ router.post('/upload', authenticateToken, upload.single('file'), uploadToCloudin
 
 // קבלת הפרופיל שלי (המשתמש המחובר)
 router.get('/me/musician-profile', authenticateToken, getMusicianProfile);
+
+// מחיקת חשבון משתמש (דורש אימות)
+router.delete('/account', authenticateToken, deleteUser);
 
 
 

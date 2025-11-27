@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
+import api from '../services/api'
 import "./Header.css"
 
 function Header() {
   const [user, setUser] = useState(null)
+  const [profilePicture, setProfilePicture] = useState(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteStep, setDeleteStep] = useState(1)
   const menuRef = useRef(null)
   const navigate = useNavigate()
 
-  const loadUser = () => {
+  const loadUser = async () => {
     const token = localStorage.getItem('token')
     const userName = localStorage.getItem('userName')
     
@@ -22,14 +26,26 @@ function Header() {
           userId: decoded.userId,
           displayName: displayName
         })
+        
+        // Load profile picture from database
+        try {
+          const profile = await api.getMyMusicianProfile()
+          if (profile && profile.profilePicture) {
+            setProfilePicture(profile.profilePicture)
+          }
+        } catch (err) {
+          console.log('No profile picture available')
+        }
       } catch (error) {
         console.error('Invalid token:', error)
         localStorage.removeItem('token')
         localStorage.removeItem('userName')
         setUser(null)
+        setProfilePicture(null)
       }
     } else {
       setUser(null)
+      setProfilePicture(null)
     }
   }
 
@@ -71,11 +87,48 @@ function Header() {
     navigate('/')
   }
 
+  const handleDeleteAccount = async () => {
+    setShowDeleteModal(true)
+    setDeleteStep(1)
+    setIsMenuOpen(false)
+  }
+
+  const confirmDelete = async () => {
+    if (deleteStep === 1) {
+      setDeleteStep(2)
+      return
+    }
+
+    // Step 2 - actually delete
+    try {
+      await api.deleteAccount()
+      localStorage.removeItem('token')
+      localStorage.removeItem('rememberedEmail')
+      localStorage.removeItem('userName')
+      setUser(null)
+      setShowDeleteModal(false)
+      setDeleteStep(1)
+      window.dispatchEvent(new Event('storage'))
+      navigate('/')
+    } catch (error) {
+      console.error('Delete error:', error)
+      alert('שגיאה במחיקת החשבון: ' + (error.message || 'אנא נסה שוב'))
+    }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false)
+    setDeleteStep(1)
+  }
+
   return (
     <div>
       <header>
         <div className="header-content">
-          <h1>MUSIC PROJECT</h1>
+          <div className="logo-section">
+            <img src="/BMproject.png" alt="BeatMatch" className="site-logo" />
+            <h1>BeatMatch</h1>
+          </div>
 
           {user ? (
             <div className="user-menu" ref={menuRef}>
@@ -83,7 +136,13 @@ function Header() {
                 className="user-button"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
-                <span className="user-icon">👤</span>
+                {profilePicture ? (
+                  <img src={profilePicture} alt="Profile" className="user-icon" />
+                ) : (
+                  <span className="user-icon">
+                    {user.displayName.charAt(0).toUpperCase()}
+                  </span>
+                )}
                 <span className="user-name">{user.displayName}</span>
 
                 <span className={`arrow ${isMenuOpen ? 'open' : ''}`}>▼</span>
@@ -96,7 +155,7 @@ function Header() {
                     className="menu-item"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <span className="menu-icon">✏️</span>
+                    <span className="menu-icon">⚙</span>
                     ערוך פרופיל
                   </NavLink>
                   <div className="menu-divider"></div>
@@ -104,8 +163,16 @@ function Header() {
                     className="menu-item logout"
                     onClick={handleLogout}
                   >
-                    <span className="menu-icon">🚪</span>
+                    <span className="menu-icon">→</span>
                     התנתק
+                  </button>
+                  <div className="menu-divider"></div>
+                  <button 
+                    className="menu-item delete"
+                    onClick={handleDeleteAccount}
+                  >
+                    <span className="menu-icon">⚠</span>
+                    מחק חשבון
                   </button>
                 </div>
               )}
@@ -118,8 +185,54 @@ function Header() {
         </div>
       </header>
       <nav>
-        <NavLink to="/">🏠 דף הבית</NavLink>
+        <NavLink to="/">דף הבית</NavLink>
       </nav>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="delete-modal-overlay" onClick={cancelDelete}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-modal-header">
+              <div className="delete-icon-warning">⚠</div>
+              <h2>{deleteStep === 1 ? 'מחיקת חשבון' : 'אישור אחרון'}</h2>
+            </div>
+            
+            <div className="delete-modal-body">
+              {deleteStep === 1 ? (
+                <>
+                  <p className="delete-warning-text">
+                    האם אתה בטוח שברצונך למחוק את החשבון שלך?
+                  </p>
+                  <ul className="delete-consequences">
+                    <li>כל הנתונים האישיים שלך יימחקו</li>
+                    <li>פרופיל המוזיקאי שלך יוסר</li>
+                    <li>כל התמונות והסרטונים יימחקו</li>
+                    <li className="delete-critical">פעולה זו אינה ניתנת לביטול!</li>
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p className="delete-final-warning">
+                    זה הצעד האחרון. כל הנתונים שלך יימחקו לצמיתות.
+                  </p>
+                  <p className="delete-confirm-text">
+                    לחץ על "מחק את החשבון" כדי לאשר.
+                  </p>
+                </>
+              )}
+            </div>
+            
+            <div className="delete-modal-footer">
+              <button className="delete-cancel-btn" onClick={cancelDelete}>
+                ביטול
+              </button>
+              <button className="delete-confirm-btn" onClick={confirmDelete}>
+                {deleteStep === 1 ? 'המשך' : 'מחק את החשבון'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

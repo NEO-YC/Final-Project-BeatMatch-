@@ -253,7 +253,7 @@ const AuthForms = () => {
                 placeholder="example@email.com"
                 autoComplete="email"
               />
-              <span className="input-icon">📧</span>
+              <span className="input-icon">@</span>
             </div>
             {errors.email && (
               <span className="error-message">{errors.email}</span>
@@ -322,7 +322,7 @@ const AuthForms = () => {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? '○' : '●'}
               </button>
             </div>
             {errors.password && (
@@ -367,7 +367,7 @@ const AuthForms = () => {
                     className="password-toggle"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? '🙈' : '👁️'}
+                    {showConfirmPassword ? '○' : '●'}
                   </button>
                 </div>
                 {errors.confirmPassword && (

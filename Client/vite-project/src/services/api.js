@@ -52,6 +52,11 @@ export function getMyMusicianProfile() {
   return request('/me/musician-profile', { method: 'GET' });
 }
 
+export function deleteAccount() {
+  // מחיקת חשבון משתמש
+  return request('/account', { method: 'DELETE' });
+}
+
 export async function uploadFile(file, options = {}) {
   // Step 1: Get signature from our server
   const signatureData = await request('/upload-signature', { method: 'GET' });
@@ -95,4 +100,4 @@ export async function uploadFile(file, options = {}) {
 }
 
 
-export default { register, login, updateMusicianProfile, getMyMusicianProfile, uploadFile };
+export default { register, login, updateMusicianProfile, getMyMusicianProfile, uploadFile, deleteAccount };

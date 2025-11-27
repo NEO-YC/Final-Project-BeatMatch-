@@ -602,3 +602,29 @@ exports.searchMusicians = async function (req, res) {
     }
 };
 
+// מחיקת משתמש (חשבון מלא)
+exports.deleteUser = async function (req, res) {
+    try {
+        const userId = req.userId; // מגיע מה-middleware של אימות
+        
+        // מחיקת המשתמש
+        const deletedUser = await User.findByIdAndDelete(userId);
+        
+        if (!deletedUser) {
+            return res.status(404).json({ 
+                "message": "משתמש לא נמצא" 
+            });
+        }
+
+        res.status(200).json({
+            "message": "חשבון המשתמש נמחק בהצלחה"
+        });
+
+    } catch (error) {
+        res.status(500).json({ 
+            "message": "שגיאה במחיקת המשתמש", 
+            "error": error.message 
+        });
+    }
+};
+
