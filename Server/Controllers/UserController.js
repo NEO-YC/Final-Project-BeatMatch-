@@ -1,6 +1,15 @@
 const User = require('../Models/UserModel');
 const bcrypt = require('bcrypt'); 
 const jwt = require('jsonwebtoken');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
+
+// configure cloudinary using env vars (values kept in Server/.env locally)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+    api_key: process.env.CLOUDINARY_API_KEY || '',
+    api_secret: process.env.CLOUDINARY_API_SECRET || ''
+});
 
 
 
@@ -250,6 +259,54 @@ exports.updateMusicianProfile = async function (req, res) {
             "message": "שגיאה בעדכון פרופיל מוזיקאי", 
             "error": error.message 
         });
+    }
+};
+
+// Upload a single file (from multer memoryStorage) to Cloudinary
+exports.uploadToCloudinary = async function (req, res) {
+    try {
+        if (!req.file || !req.file.buffer) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                { folder: 'final-project' },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            );
+            streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+        });
+
+        // If the client sent a "save" hint (FormData field), persist the URL into the user's musicianProfile
+        const saveHint = (req.body && req.body.save) || (req.query && req.query.save) || null;
+        if (saveHint && req.userId) {
+            try {
+                const user = await User.findById(req.userId);
+                if (user) {
+                    if (!Array.isArray(user.musicianProfile)) user.musicianProfile = [];
+                    if (user.musicianProfile.length === 0) {
+                        user.musicianProfile.push({ profilePicture: '', galleryPictures: [], galleryVideos: [], availability: [] });
+                    }
+                    const profile = user.musicianProfile[0];
+                    if (saveHint === 'profile') {
+                        profile.profilePicture = result.secure_url;
+                    } else if (saveHint === 'gallery') {
+                        if (!Array.isArray(profile.galleryPictures)) profile.galleryPictures = [];
+                        profile.galleryPictures.push(result.secure_url);
+                    }
+                    await user.save();
+                }
+            } catch (errSave) {
+                console.error('Failed to persist uploaded URL to user profile:', errSave);
+            }
+        }
+
+        res.status(200).json({ url: result.secure_url, public_id: result.public_id });
+    } catch (error) {
+        console.error('Cloudinary upload error:', error);
+        res.status(500).json({ message: 'שגיאה בהעלאת קובץ', error: error.message });
     }
 };
 
