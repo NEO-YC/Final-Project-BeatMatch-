@@ -120,7 +120,7 @@ export default function CreateMusicianProfile() {
     const token = localStorage.getItem('token');
     if (!token) {
       setError('עליך להתחבר כדי ליצור פרופיל מוזיקאי');
-      setTimeout(() => navigate('/authforms'), 1500);
+      setTimeout(() => navigate('/register'), 1500);
     }
   }, [navigate]);
   // --------------------------------------------------
@@ -250,7 +250,7 @@ export default function CreateMusicianProfile() {
       const token = localStorage.getItem('token');
       if (!token) {
         setError('עליך להתחבר כדי ליצור פרופיל');
-        setTimeout(() => navigate('/authforms'), 1200);
+        setTimeout(() => navigate('/register'), 1200);
         return;
       }
 
@@ -270,6 +270,34 @@ export default function CreateMusicianProfile() {
         if (form.region) locationArray.push(form.region);
         if (form.location) locationArray.push(form.location);
 
+        // If there are files, upload them first to the server (/user/upload -> Cloudinary)
+        let profileUrl = '';
+        let uploadedImages = [];
+        let uploadedVideos = [];
+        const token = localStorage.getItem('token');
+
+        try {
+          if (profilePicture) {
+            const up = await api.uploadFile(profilePicture);
+            profileUrl = up && up.url ? up.url : '';
+          }
+
+          if (images && images.length) {
+            const imgPromises = images.map(f => api.uploadFile(f).then(r => r.url));
+            uploadedImages = (await Promise.all(imgPromises)).filter(Boolean);
+          }
+
+          if (videos && videos.length) {
+            const vidPromises = videos.map(f => api.uploadFile(f).then(r => r.url));
+            uploadedVideos = (await Promise.all(vidPromises)).filter(Boolean);
+          }
+        } catch (upErr) {
+          console.error('Upload failed:', upErr);
+          setError('שגיאה בהעלאת קבצים');
+          setLoading(false);
+          return;
+        }
+
         const payload = {
           instrument: form.instrument || selectedInstruments.join(', '),
           musictype: form.musictype || selectedStyles.join(', '),
@@ -277,9 +305,9 @@ export default function CreateMusicianProfile() {
           eventTypes: form.eventTypes ? form.eventTypes.split(',').map(x => x.trim()).filter(Boolean) : selectedEventTypes,
           bio: form.bio || '',
           location: locationArray,
-          profilePicture: profilePreview || '',
-          galleryPictures: images.map(f => f.name || ''),
-          galleryVideos: videos.map(f => f.name || '')
+          profilePicture: profileUrl || profilePreview || '',
+          galleryPictures: uploadedImages,
+          galleryVideos: uploadedVideos
         };
 
         const res = await api.updateMusicianProfile(payload);

@@ -111,7 +111,7 @@ function Header() {
               )}
             </div>
           ) : (
-            <NavLink to="/authforms" className="login-button">
+            <NavLink to="/register" className="login-button">
               התחבר / הירשם
             </NavLink>
           )}

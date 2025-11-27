@@ -108,7 +108,7 @@ export default function EditMusicianProfile() {
     if (!token) {
       // אין טוקן - הפנה להתחברות
       setError('עליך להתחבר כדי לערוך את הפרופיל שלך');
-      setTimeout(() => navigate('/authforms'), 2000);
+      setTimeout(() => navigate('/register'), 2000);
     }
   }, [navigate]);
 
@@ -285,7 +285,7 @@ export default function EditMusicianProfile() {
     const token = localStorage.getItem('token');
     if (!token) {
       setError('עליך להתחבר כדי לעדכן את הפרופיל');
-      setTimeout(() => navigate('/authforms'), 2000);
+      setTimeout(() => navigate('/register'), 2000);
       return;
     }
 

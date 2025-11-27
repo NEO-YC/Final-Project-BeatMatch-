@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import './AuthForms.css';
 
 const AuthForms = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(location.pathname === '/login');
   const [formData, setFormData] = useState({
     email: '', password: '', confirmPassword: '', firstName: '', lastName: '', phone: '', dateOfBirth: '', acceptTerms: false, rememberMe: false
   });
@@ -133,7 +134,7 @@ const AuthForms = () => {
         // keep overlay briefly then go to login to avoid flashing other routes
         setTimeout(() => {
           setShowSignupOverlay(false);
-          navigate('/authforms');
+          navigate('/login');
         }, 1000);
       }
     } catch (err) {
@@ -144,7 +145,21 @@ const AuthForms = () => {
   };
 
   const resetForm = () => { setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '', phone: '', dateOfBirth: '', acceptTerms: false }); setErrors({}); setPasswordStrength(0); };
-  const toggleFormMode = () => { setIsLogin(!isLogin); resetForm(); };
+  
+  const toggleFormMode = () => {
+    // navigating to login if register or to register if login
+    if (location.pathname === '/login') {
+      navigate('/register');
+    } else {
+      navigate('/login');
+    }
+    resetForm();
+  };
+
+  useEffect(() => {
+    // keep internal mode in sync with the URL
+    setIsLogin(location.pathname === '/login');
+  }, [location.pathname]);
   const getPasswordStrengthLabel = () => { if (passwordStrength < 40) return 'חלשה'; if (passwordStrength < 70) return 'בינונית'; if (passwordStrength < 90) return 'חזקה'; return 'מצוינת'; };
   const getPasswordStrengthClass = () => { if (passwordStrength < 40) return 'weak'; if (passwordStrength < 70) return 'medium'; if (passwordStrength < 90) return 'strong'; return 'excellent'; };
 
