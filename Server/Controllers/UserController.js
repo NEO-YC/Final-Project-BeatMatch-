@@ -550,7 +550,7 @@ exports.searchMusicians = async function (req, res) {
         let query = { isMusician: true };
 
         // עזר להמיר לפרמטרים רלוונטיים (array of strings)
-        const toArray = (v) => {א
+        const toArray = (v) => {
             if (!v) return [];
             if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
             return String(v).split(',').map(x => x.trim()).filter(Boolean);
@@ -584,12 +584,37 @@ exports.searchMusicians = async function (req, res) {
         // ביצוע החיפוש ללא החזרת סיסמאות
         const musicians = await User.find(query).select('-password');
 
+        // Diagnostic log: show sample fields to verify data presence
+        if (musicians && musicians.length) {
+            const m = musicians[0];
+            console.log('[searchMusicians] sample', {
+                _id: m._id?.toString(),
+                firstname: m.firstname,
+                lastname: m.lastname,
+                phone: m.phone,
+                profilePicture: Array.isArray(m.musicianProfile) && m.musicianProfile[0] ? m.musicianProfile[0].profilePicture : undefined,
+            });
+        } else {
+            console.log('[searchMusicians] no musicians matched query', query);
+        }
+
+        // חשוב: מיפוי שדות לתצוגה בצד הקליינט
+        // שמנו לב שבמודל המשתמש השדות נקראים אחרת ממה שהקליינט מצפה.
+        // כאן אנו מתאימים את השמות שהקליינט (MusicianCard.jsx) מצפה להם:
+        // - phoneNumber: נלקח מהשדה phone במודל
+        // - profileImage: נלקח מה-musicianProfile[0].profilePicture אם קיים
+        // - musicianProfile: מעבירים את האובייקט הראשון בפרופיל המוזיקאי
         res.status(200).json({
             "count": musicians.length,
             "musicians": musicians.map(m => ({
                 _id: m._id,
                 firstname: m.firstname,
                 lastname: m.lastname,
+                // מספר הטלפון כפי שהקליינט מצפה
+                phoneNumber: m.phone,
+                // תמונת פרופיל אם קיימת בתוך פרופיל המוזיקאי
+                profileImage: m.musicianProfile && m.musicianProfile[0] ? m.musicianProfile[0].profilePicture : undefined,
+                // פרופיל המוזיקאי להצגת כלי נגינה/סגנונות/מיקום וכו'
                 musicianProfile: m.musicianProfile[0]
             }))
         });

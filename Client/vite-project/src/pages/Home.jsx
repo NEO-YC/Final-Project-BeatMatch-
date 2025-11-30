@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './Home.css';
+import MusicianCard from '../components/MusicianCard';
 
 // דף חיפוש מוזיקאים חכם ונוח
 // - תגיות (chips)
@@ -54,7 +55,6 @@ const SUGGESTED_EVENTS = [
 ];
 
 export default function Home(){
-  console.log("test branch");
   
   const [query, setQuery] = useState(''); // חיפוש חופשי (מחפש גם ב-location)
 
@@ -110,7 +110,7 @@ export default function Home(){
       else if (locationInput) params.append('location', locationInput);
       if (query) params.append('q', query);
 
-      const url = '/user/musicians/search?' + params.toString();
+      const url = 'http://127.0.0.1:3000/user/musicians/search?' + params.toString();
       const res = await fetch(url);
       if(!res.ok) throw new Error(await res.text());
       const data = await res.json();
@@ -256,19 +256,7 @@ export default function Home(){
 
         <div className="cards">
           {results.map(r=> (
-            <div className="card" key={r._id}>
-              <div className="card-left">
-                <div className="avatar">{r.firstname ? r.firstname[0] : 'M'}</div>
-              </div>
-              <div className="card-body">
-                <div className="card-title">{r.firstname} {r.lastname}</div>
-                <div className="card-sub">{r.musicianProfile ? (r.musicianProfile.instrument || r.musicianProfile.musictype) : ''}</div>
-                <div className="card-text">{r.musicianProfile && r.musicianProfile.bio ? r.musicianProfile.bio : 'תיאור לא זמין'}</div>
-                <div className="card-footer">
-                  <small>אזור: {r.musicianProfile && r.musicianProfile.location ? (Array.isArray(r.musicianProfile.location) ? r.musicianProfile.location.join(', ') : r.musicianProfile.location) : 'לא צויין'}</small>
-                </div>
-              </div>
-            </div>
+            <MusicianCard key={r._id} musician={r} />
           ))}
         </div>
       </section>

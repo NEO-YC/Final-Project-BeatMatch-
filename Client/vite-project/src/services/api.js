@@ -99,5 +99,22 @@ export async function uploadFile(file, options = {}) {
   return { url: result.secure_url, public_id: result.public_id };
 }
 
+export function searchMusicians(params = {}) {
+  const queryParams = new URLSearchParams();
+  
+  // Handle arrays (instrument, musictype, eventTypes)
+  Object.keys(params).forEach(key => {
+    const value = params[key];
+    if (Array.isArray(value)) {
+      value.forEach(v => queryParams.append(key, v));
+    } else if (value) {
+      queryParams.append(key, value);
+    }
+  });
+  
+  const queryString = queryParams.toString();
+  const path = queryString ? `/musicians/search?${queryString}` : '/musicians/search';
+  return request(path);
+}
 
-export default { register, login, updateMusicianProfile, getMyMusicianProfile, uploadFile, deleteAccount };
+export default { register, login, updateMusicianProfile, getMyMusicianProfile, uploadFile, deleteAccount, searchMusicians };
