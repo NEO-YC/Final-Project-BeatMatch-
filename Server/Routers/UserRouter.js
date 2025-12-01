@@ -29,10 +29,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 // נתיבים פומביים (ללא אימות)
 router.post('/register', register);
 router.post('/login', login);
-
 // חיפוש מוזיקאים - פומבי
 router.get('/musicians/search', searchMusicians);
-
 // צפייה בפרופיל מוזיקאי - פומבי
 router.get('/musicians/:userId', getMusicianProfile);
 
@@ -44,13 +42,12 @@ router.put('/musician/profile', authenticateToken, updateMusicianProfile);
 router.put('/musician/availability', authenticateToken, updateAvailability);
 // Get Cloudinary upload signature
 router.get('/upload-signature', authenticateToken, getUploadSignature);
-// upload single file to Cloudinary (authenticated)
+// upload single file to Cloudinary 
 router.post('/upload', authenticateToken, upload.single('file'), uploadToCloudinary);
 
 // קבלת הפרופיל שלי (המשתמש המחובר)
 router.get('/me/musician-profile', authenticateToken, getMusicianProfile);
-
-// מחיקת חשבון משתמש (דורש אימות)
+// מחיקת חשבון משתמש )
 router.delete('/account', authenticateToken, deleteUser);
 
 
