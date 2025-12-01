@@ -21,7 +21,9 @@ export default function CreateMusicianProfile() {
     bio: '',
     // change location to region: 'north' | 'center' | 'south' (keeps compatibility)
     location: '',
-    region: ''
+    region: '',
+    phone: '',
+    whatsappLink: ''
   });
 
   // רשימת סגנונות מוזיקליים לבחירה (ניתן לבחור יותר מאחד)
@@ -92,6 +94,7 @@ export default function CreateMusicianProfile() {
   // state לקבצים והודעות סטטוס
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [youtubeLinks, setYoutubeLinks] = useState(['']); // מערך של קישורים
   const [isStylesOpen, setIsStylesOpen] = useState(false);
   const [isInstrumentsOpen, setIsInstrumentsOpen] = useState(false);
   const [isEventsOpen, setIsEventsOpen] = useState(false);
@@ -145,6 +148,14 @@ export default function CreateMusicianProfile() {
     setForm(prev => ({ ...prev, bio: truncated }));
   };
 
+  // פונקציה לחילוץ מזהה הוידאו מ-URL של YouTube
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
   // שינוי בבחירת סגנון מוזיקלי - toggle ברשימת הסגנונות
   const handleStyleToggle = (style) => {
     setStylesError('');
@@ -183,12 +194,21 @@ export default function CreateMusicianProfile() {
   // handlers לקבצים - ממירים ל-array כדי לעבוד איתם
   const handleImages = (e) => {
     const files = Array.from(e.target.files || []);
-    setImages(files);
+    setImages([...images, ...files]);
   };
 
   const handleVideos = (e) => {
     const files = Array.from(e.target.files || []);
-    setVideos(files);
+    setVideos([...videos, ...files]);
+  };
+
+  // מחיקת תמונה או סרטון לפני העלאה
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  const removeVideo = (index) => {
+    setVideos(videos.filter((_, i) => i !== index));
   };
 
   // מטפל בבחירת תמונת פרופיל ומייצר preview
@@ -307,10 +327,13 @@ export default function CreateMusicianProfile() {
           eventTypes: form.eventTypes ? form.eventTypes.split(',').map(x => x.trim()).filter(Boolean) : selectedEventTypes,
           bio: form.bio || '',
           location: locationArray,
+          phone: form.phone || '',
+          whatsappLink: form.whatsappLink || '',
           // only use the uploaded URL; do NOT store blob: object URLs
           profilePicture: profileUrl && typeof profileUrl === 'string' && profileUrl.startsWith('http') ? profileUrl : '',
           galleryPictures: uploadedImages,
-          galleryVideos: uploadedVideos
+          galleryVideos: uploadedVideos,
+          youtubeLinks: youtubeLinks.filter(link => link.trim() !== '') // רק קישורים לא ריקים
         };
 
         const res = await api.updateMusicianProfile(payload);
@@ -444,6 +467,33 @@ export default function CreateMusicianProfile() {
               <div className="bio-counter"><span>{(form.bio ? form.bio.length : 0)} / 250</span></div>
             </div>
 
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">מספר טלפון *</label>
+                <input 
+                  name="phone" 
+                  type="tel" 
+                  className="form-input" 
+                  value={form.phone} 
+                  onChange={handleChange}
+                  placeholder="054-1234567"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">קישור לוואטסאפ *</label>
+                <input 
+                  name="whatsappLink" 
+                  type="url" 
+                  className="form-input" 
+                  value={form.whatsappLink} 
+                  onChange={handleChange}
+                  placeholder="https://wa.me/972541234567"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="form-group">
               <label className="form-label">אזור/הופעות</label>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -466,6 +516,42 @@ export default function CreateMusicianProfile() {
                     <span>בחר תמונות</span>
                   </label>
                 </div>
+                {images.length > 0 && (
+                  <div style={{marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px'}}>
+                    {images.map((img, index) => (
+                      <div key={index} style={{position: 'relative', aspectRatio: '1', border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden'}}>
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt={`תמונה ${index + 1}`}
+                          style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            lineHeight: '1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -476,6 +562,104 @@ export default function CreateMusicianProfile() {
                     <span>בחר סרטונים</span>
                   </label>
                 </div>
+                {videos.length > 0 && (
+                  <div style={{marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '8px'}}>
+                    {videos.map((vid, index) => (
+                      <div key={index} style={{position: 'relative', aspectRatio: '16/9', border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden', background: '#000'}}>
+                        <video
+                          src={URL.createObjectURL(vid)}
+                          style={{width: '100%', height: '100%', objectFit: 'contain'}}
+                          controls
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeVideo(index)}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            lineHeight: '1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">קישורי YouTube (סרטוני הופעה)</label>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                {youtubeLinks.map((link, index) => {
+                  const videoId = getYouTubeVideoId(link);
+                  return (
+                    <div key={index} style={{border: '1px solid #ddd', borderRadius: '8px', padding: '12px', background: '#f9f9f9'}}>
+                      <div style={{display: 'flex', gap: '8px', alignItems: 'center', marginBottom: videoId ? '8px' : 0}}>
+                        <input
+                          type="url"
+                          className="form-input"
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          value={link}
+                          onChange={(e) => {
+                            const newLinks = [...youtubeLinks];
+                            newLinks[index] = e.target.value;
+                            setYoutubeLinks(newLinks);
+                          }}
+                          style={{flex: 1, margin: 0}}
+                        />
+                        {youtubeLinks.length > 1 && (
+                          <button
+                            type="button"
+                            className="btn secondary-btn"
+                            onClick={() => {
+                              const newLinks = youtubeLinks.filter((_, i) => i !== index);
+                              setYoutubeLinks(newLinks.length ? newLinks : ['']);
+                            }}
+                            style={{padding: '8px 12px', background: '#dc3545', color: 'white'}}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                      {videoId && (
+                        <div style={{aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden'}}>
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            src={`https://www.youtube.com/embed/${videoId}`}
+                            title={`תצוגה מקדימה ${index + 1}`}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  className="btn secondary-btn"
+                  onClick={() => setYoutubeLinks([...youtubeLinks, ''])}
+                  style={{alignSelf: 'flex-start', marginTop: '4px'}}
+                >
+                  + הוסף קישור נוסף
+                </button>
               </div>
             </div>
 

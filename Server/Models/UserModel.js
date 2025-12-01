@@ -19,8 +19,10 @@ const userSchema = new mongoose.Schema({
       eventTypes:       [{ type: String, trim: true }],
       bio:              { type: String, trim: true, maxlength: 250 },
       location:         [{ type: String, trim: true }],
+      whatsappLink:     { type: String, trim: true },
       galleryPictures:  [{ type: String, trim: true }],
       galleryVideos:    [{ type: String, trim: true }],
+      youtubeLinks:     [{ type: String, trim: true }],
 
       availability: {
         type: [{

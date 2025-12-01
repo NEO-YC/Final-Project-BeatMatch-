@@ -5,11 +5,13 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
   border: 1px solid #e5e7eb;
+  cursor: pointer;
 }
 
 .musician-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  border-color: rgba(47, 216, 199, 0.4);
 }
 
 .musician-card-header {
@@ -64,18 +66,6 @@
   margin: 0;
 }
 
-.musician-location {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #64748b;
-}
-
-.location-icon {
-  font-size: 16px;
-}
-
 .musician-card-body {
   padding: 20px;
   display: flex;
@@ -92,9 +82,8 @@
 .section-label {
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #64748b;
+  margin-bottom: 2px;
 }
 
 .tags {
@@ -119,6 +108,12 @@
   border: 1px solid #93c5fd;
 }
 
+.event-tag {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
 .genre-tag {
   background: #fae8ff;
   color: #a21caf;
@@ -133,36 +128,22 @@
 }
 
 .musician-card-footer {
-  padding: 16px 20px;
+  padding: 12px 20px;
   background: #f8fafc;
   border-top: 1px solid #e5e7eb;
 }
 
-.btn-whatsapp {
+.card-location {
   display: flex;
   align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #64748b;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 20px;
-  background: #25D366;
-  color: #ffffff;
+}
+
+.location-icon {
   font-size: 16px;
-  font-weight: 600;
-  text-decoration: none;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
-}
-
-.btn-whatsapp:hover {
-  background: #128C7E;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
-}
-
-.whatsapp-icon {
-  font-size: 20px;
 }
 
 @media (max-width: 640px) {

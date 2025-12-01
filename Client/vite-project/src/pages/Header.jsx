@@ -189,7 +189,7 @@ function Header() {
                 )}
               </div>
             ) : (
-              <NavLink to="/register" className="login-button">
+              <NavLink to="/login" className="login-button">
                 התחבר / הירשם
               </NavLink>
             )}

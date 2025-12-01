@@ -16,7 +16,9 @@ export default function EditMusicianProfile() {
     eventTypes: '',
     bio: '',
     location: '',
-    region: ''
+    region: '',
+    phone: '',
+    whatsappLink: ''
   });
 
   // רשימת סגנונות מוזיקליים לבחירה
@@ -86,6 +88,9 @@ export default function EditMusicianProfile() {
   // state לקבצים והודעות סטטוס
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [youtubeLinks, setYoutubeLinks] = useState(['']); // מערך של קישורים
+  const [existingGalleryImages, setExistingGalleryImages] = useState([]); // תמונות קיימות
+  const [existingGalleryVideos, setExistingGalleryVideos] = useState([]); // סרטונים קיימים
   const [isStylesOpen, setIsStylesOpen] = useState(false);
   const [isInstrumentsOpen, setIsInstrumentsOpen] = useState(false);
   const [isEventsOpen, setIsEventsOpen] = useState(false);
@@ -152,7 +157,9 @@ export default function EditMusicianProfile() {
             eventTypes: Array.isArray(profile.eventTypes) ? profile.eventTypes.join(', ') : '',
             bio: profile.bio || '',
             location: locationValue,
-            region: regionValue
+            region: regionValue,
+            phone: res.phone || '',
+            whatsappLink: profile.whatsappLink || ''
           });
 
           // עדכון הבחירות מהנתונים הקיימים
@@ -173,6 +180,21 @@ export default function EditMusicianProfile() {
           // הצגת תמונת פרופיל אם קיימת
           if (profile.profilePicture) {
             setProfilePreview(profile.profilePicture);
+          }
+
+          // טעינת קישורי YouTube אם קיימים
+          if (profile.youtubeLinks && Array.isArray(profile.youtubeLinks) && profile.youtubeLinks.length > 0) {
+            setYoutubeLinks(profile.youtubeLinks);
+          }
+
+          // טעינת תמונות גלריה קיימות
+          if (profile.galleryPictures && Array.isArray(profile.galleryPictures)) {
+            setExistingGalleryImages(profile.galleryPictures);
+          }
+
+          // טעינת סרטוני גלריה קיימים
+          if (profile.galleryVideos && Array.isArray(profile.galleryVideos)) {
+            setExistingGalleryVideos(profile.galleryVideos);
           }
         }
       } catch (err) {
@@ -198,6 +220,14 @@ export default function EditMusicianProfile() {
     const MAX = 250;
     const truncated = value.slice(0, MAX);
     setForm(prev => ({ ...prev, bio: truncated }));
+  };
+
+  // פונקציה לחילוץ מזהה הוידאו מ-URL של YouTube
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
   };
 
   // שינוי בבחירת סגנון מוזיקלי
@@ -343,17 +373,29 @@ export default function EditMusicianProfile() {
         // otherwise send empty string (avoid saving blob: URLs)
         const finalProfileUrl = profileUrl || (profilePreview && typeof profilePreview === 'string' && profilePreview.startsWith('http') ? profilePreview : '');
 
+        // שילוב תמונות קיימות עם חדשות
+        const allGalleryPictures = [...existingGalleryImages, ...uploadedImages];
+        const allGalleryVideos = [...existingGalleryVideos, ...uploadedVideos];
+
         const payload = {
-          instrument: form.instrument,
-          musictype: form.musictype,
+          instrument: selectedInstruments.join(', '),
+          musictype: selectedStyles.join(', '),
           experienceYears: form.experienceYears || '0',
-          eventTypes: form.eventTypes ? form.eventTypes.split(',').map(e => e.trim()).filter(Boolean) : [],
+          eventTypes: selectedEventTypes,
           bio: form.bio || '',
           location: locationArray,
+          phone: form.phone || '',
+          whatsappLink: form.whatsappLink || '',
           profilePicture: finalProfileUrl,
-          galleryPictures: uploadedImages,
-          galleryVideos: uploadedVideos
+          galleryPictures: allGalleryPictures,
+          galleryVideos: allGalleryVideos,
+          youtubeLinks: youtubeLinks.filter(link => link.trim() !== '') // רק קישורים לא ריקים
         };
+
+        console.log('=== PAYLOAD BEING SENT ===');
+        console.log('phone:', form.phone);
+        console.log('whatsappLink:', form.whatsappLink);
+        console.log('Full payload:', payload);
 
         const res = await api.updateMusicianProfile(payload);
         setSuccess(res.message || 'הפרופיל עודכן בהצלחה! 🎉');
@@ -553,6 +595,33 @@ export default function EditMusicianProfile() {
               </div>
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">מספר טלפון *</label>
+              <input 
+                name="phone" 
+                type="tel" 
+                className="form-input" 
+                value={form.phone} 
+                onChange={handleChange}
+                placeholder="054-1234567"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">קישור לוואטסאפ *</label>
+              <input 
+                name="whatsappLink" 
+                type="url" 
+                className="form-input" 
+                value={form.whatsappLink} 
+                onChange={handleChange}
+                placeholder="https://wa.me/972541234567"
+                required
+              />
+            </div>
+          </div>
+
           <div className="form-group">
             <label className="form-label">אזור/הופעות</label>
             <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -569,6 +638,39 @@ export default function EditMusicianProfile() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">הוספת תמונות הופעה (תמיכה בקבצים מרובים)</label>
+              {existingGalleryImages.length > 0 && (
+                <div style={{marginBottom: '12px'}}>
+                  <p style={{fontSize: '14px', color: '#666', marginBottom: '8px'}}>תמונות קיימות:</p>
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px'}}>
+                    {existingGalleryImages.map((img, idx) => (
+                      <div key={idx} style={{position: 'relative', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ddd'}}>
+                        <img src={img} alt={`תמונה ${idx + 1}`} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                        <button
+                          type="button"
+                          onClick={() => setExistingGalleryImages(existingGalleryImages.filter((_, i) => i !== idx))}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: 'rgba(255, 0, 0, 0.8)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            lineHeight: '1',
+                            padding: 0
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="file-input-wrapper">
                 <label className="file-trigger file-action-btn">
                   <input ref={imageInputRef} className="hidden-file-input" type="file" accept="image/*" multiple onChange={handleImages} />
@@ -578,12 +680,106 @@ export default function EditMusicianProfile() {
             </div>
             <div className="form-group">
               <label className="form-label">הוספת סרטונים (וידאו)</label>
+              {existingGalleryVideos.length > 0 && (
+                <div style={{marginBottom: '12px'}}>
+                  <p style={{fontSize: '14px', color: '#666', marginBottom: '8px'}}>סרטונים קיימים:</p>
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '8px'}}>
+                    {existingGalleryVideos.map((vid, idx) => (
+                      <div key={idx} style={{position: 'relative', aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ddd'}}>
+                        <video src={vid} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                        <button
+                          type="button"
+                          onClick={() => setExistingGalleryVideos(existingGalleryVideos.filter((_, i) => i !== idx))}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: 'rgba(255, 0, 0, 0.8)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            lineHeight: '1',
+                            padding: 0
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="file-input-wrapper">
                 <label className="file-trigger file-action-btn">
                   <input ref={videoInputRef} className="hidden-file-input" type="file" accept="video/*" multiple onChange={handleVideos} />
                   <span>בחר סרטונים</span>
                 </label>
               </div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">קישורי YouTube (סרטוני הופעה)</label>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+              {youtubeLinks.map((link, index) => {
+                const videoId = getYouTubeVideoId(link);
+                return (
+                  <div key={index} style={{border: '1px solid #ddd', borderRadius: '8px', padding: '12px', background: '#f9f9f9'}}>
+                    <div style={{display: 'flex', gap: '8px', alignItems: 'center', marginBottom: videoId ? '8px' : 0}}>
+                      <input
+                        type="url"
+                        className="form-input"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={link}
+                        onChange={(e) => {
+                          const newLinks = [...youtubeLinks];
+                          newLinks[index] = e.target.value;
+                          setYoutubeLinks(newLinks);
+                        }}
+                        style={{flex: 1, margin: 0}}
+                      />
+                      {youtubeLinks.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn secondary-btn"
+                          onClick={() => {
+                            const newLinks = youtubeLinks.filter((_, i) => i !== index);
+                            setYoutubeLinks(newLinks.length ? newLinks : ['']);
+                          }}
+                          style={{padding: '8px 12px', background: '#dc3545', color: 'white'}}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    {videoId && (
+                      <div style={{aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden'}}>
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          title={`תצוגה מקדימה ${index + 1}`}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                className="btn secondary-btn"
+                onClick={() => setYoutubeLinks([...youtubeLinks, ''])}
+                style={{alignSelf: 'flex-start', marginTop: '4px'}}
+              >
+                + הוסף קישור נוסף
+              </button>
             </div>
           </div>
 

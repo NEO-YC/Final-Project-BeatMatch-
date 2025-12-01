@@ -203,22 +203,33 @@ exports.login = async function (req, res) {
 exports.updateMusicianProfile = async function (req, res) {
     try {
         const userId = req.userId; // מגיע מה-middleware של אימות
-        const { 
-            instrument, 
-            musictype, 
-            experienceYears, 
+        const {
+            instrument,
+            musictype,
+            experienceYears,
             profilePicture,
             eventTypes,
             bio,
             location,
+            phone,
+            whatsappLink,
             galleryPictures,
-            galleryVideos
+            galleryVideos,
+            youtubeLinks
         } = req.body;
 
-        // מציאת המשתמש
+        console.log('=== SERVER RECEIVED ===');
+        console.log('phone:', phone);
+        console.log('whatsappLink:', whatsappLink);
+        console.log('Full body:', req.body);        // מציאת המשתמש
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ "message": "משתמש לא נמצא" });
+        }
+
+        // עדכון טלפון ברמת המשתמש (אם סופק)
+        if (phone !== undefined) {
+            user.phone = phone;
         }
 
         // עדכון או יצירת פרופיל מוזיקאי
@@ -232,8 +243,10 @@ exports.updateMusicianProfile = async function (req, res) {
                 eventTypes: eventTypes || [],
                 bio,
                 location: location || [],
+                whatsappLink: whatsappLink || '',
                 galleryPictures: galleryPictures || [],
                 galleryVideos: galleryVideos || [],
+                youtubeLinks: youtubeLinks || [],
                 availability: []
             });
         } else {
@@ -246,8 +259,10 @@ exports.updateMusicianProfile = async function (req, res) {
             if (eventTypes !== undefined) profile.eventTypes = eventTypes;
             if (bio !== undefined) profile.bio = bio;
             if (location !== undefined) profile.location = location;
+            if (whatsappLink !== undefined) profile.whatsappLink = whatsappLink;
             if (galleryPictures !== undefined) profile.galleryPictures = galleryPictures;
             if (galleryVideos !== undefined) profile.galleryVideos = galleryVideos;
+            if (youtubeLinks !== undefined) profile.youtubeLinks = youtubeLinks;
         }
 
         // סימון שהמשתמש הוא מוזיקאי
@@ -517,6 +532,7 @@ exports.getMusicianProfile = async function (req, res) {
                 lastname: user.lastname,
                 email: user.email
             },
+            "phone": user.phone,
             "musicianProfile": user.musicianProfile[0]
         });
 
@@ -547,7 +563,9 @@ exports.getMusicianProfile = async function (req, res) {
 exports.searchMusicians = async function (req, res) {
     try {
         // פרמטרים יכולים להגיע כ-array (repeated params) או כמחרוזת מופרדת בפסיקים
-        const { musictype, location, instrument, eventTypes, region } = req.query;
+        const { musictype, location, instrument, eventTypes, region, q } = req.query;
+
+        console.log('[searchMusicians] Received params:', { musictype, location, instrument, eventTypes, region, q });
 
         // בניית query בסיסי - רק מוזיקאים
         let query = { isMusician: true };
@@ -559,16 +577,35 @@ exports.searchMusicians = async function (req, res) {
             return String(v).split(',').map(x => x.trim()).filter(Boolean);
         };
 
-        // סוגי מוזיקה
-        const types = toArray(musictype);
-        if (types.length) {
-            query['musicianProfile.musictype'] = { $in: types.map(t => new RegExp(t, 'i')) };
+        // חיפוש לפי שם מוזיקאי (q) - חיפוש ברמת המשתמש (לא בתוך musicianProfile)
+        if (q && q.trim()) {
+            const searchTerm = String(q).trim();
+            console.log('[searchMusicians] Name search for:', searchTerm);
+            query.$or = [
+                { firstname: new RegExp(searchTerm, 'i') },
+                { lastname: new RegExp(searchTerm, 'i') }
+            ];
         }
 
-        // כלי נגינה
+        // עבור שאר השדות - musicianProfile הוא מערך, אבל MongoDB תומך בניתוב אוטומטי
+        // כלומר musicianProfile.instrument יחפש בכל האלמנטים במערך musicianProfile
+        
+        // שים לב: instrument ו-musictype הם מחרוזות (לא מערכים) עם ערכים מופרדים בפסיקים
+        // לדוגמה: "גיטרה,פסנתר,תופים"
+        
+        // סוגי מוזיקה - חיפוש במחרוזת שמכילה ערכים מופרדים בפסיקים
+        const types = toArray(musictype);
+        if (types.length) {
+            // נחפש שאחד מהסוגים מופיע במחרוזת musictype
+            const typePattern = types.join('|'); // "ישראלי|מזרחי|עממי"
+            query['musicianProfile.musictype'] = new RegExp(typePattern, 'i');
+        }
+
+        // כלי נגינה - חיפוש במחרוזת שמכילה ערכים מופרדים בפסיקים
         const instruments = toArray(instrument);
         if (instruments.length) {
-            query['musicianProfile.instrument'] = { $in: instruments.map(i => new RegExp(i, 'i')) };
+            const instrumentPattern = instruments.join('|');
+            query['musicianProfile.instrument'] = new RegExp(instrumentPattern, 'i');
         }
 
         // סוגי אירועים
@@ -577,12 +614,26 @@ exports.searchMusicians = async function (req, res) {
             query['musicianProfile.eventTypes'] = { $in: events.map(e => new RegExp(e, 'i')) };
         }
 
-        // אזור/מיקום: אם נשלח region נשתמש בו, אחרת נתמוך ב-location חופשי
+        // אזור/מיקום: location בתוך musicianProfile הוא מערך של מחרוזות
+        // צריך לחפש אלמנט שמכיל את האזור הרצוי
+        // שים לב: המיקומים נשמרים באנגלית בדאטהבייס (north/center/south)
         if (region) {
-            query['musicianProfile.region'] = new RegExp(String(region).trim(), 'i');
+            console.log('[searchMusicians] Region search:', region);
+            // חיפוש ישיר באנגלית כפי שנשמר בדאטהבייס
+            query['musicianProfile.location'] = region;
         } else if (location) {
+            console.log('[searchMusicians] Location search:', location);
             query['musicianProfile.location'] = new RegExp(String(location).trim(), 'i');
         }
+
+        console.log('[searchMusicians] Query filters:', {
+            hasNameSearch: !!query.$or,
+            hasInstruments: !!query['musicianProfile.instrument'],
+            hasMusicTypes: !!query['musicianProfile.musictype'],
+            hasEventTypes: !!query['musicianProfile.eventTypes'],
+            hasLocation: !!query['musicianProfile.location'],
+            locationValue: query['musicianProfile.location']
+        });
 
         // ביצוע החיפוש ללא החזרת סיסמאות
         const musicians = await User.find(query).select('-password');
@@ -590,15 +641,16 @@ exports.searchMusicians = async function (req, res) {
         // Diagnostic log: show sample fields to verify data presence
         if (musicians && musicians.length) {
             const m = musicians[0];
-            console.log('[searchMusicians] sample', {
+            console.log('[searchMusicians] Found', musicians.length, 'musicians. Sample:', {
                 _id: m._id?.toString(),
                 firstname: m.firstname,
                 lastname: m.lastname,
                 phone: m.phone,
+                location: Array.isArray(m.musicianProfile) && m.musicianProfile[0] ? m.musicianProfile[0].location : undefined,
                 profilePicture: Array.isArray(m.musicianProfile) && m.musicianProfile[0] ? m.musicianProfile[0].profilePicture : undefined,
             });
         } else {
-            console.log('[searchMusicians] no musicians matched query', query);
+            console.log('[searchMusicians] No musicians matched. Query was:', JSON.stringify(query, null, 2));
         }
 
         // חשוב: מיפוי שדות לתצוגה בצד הקליינט
