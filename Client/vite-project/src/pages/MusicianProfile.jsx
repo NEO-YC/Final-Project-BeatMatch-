@@ -108,6 +108,12 @@ export default function MusicianProfile() {
             <span className="icon">📍</span>
             <span>{location}</span>
           </div>
+          {profile.experienceYears && (
+            <div className="profile-experience-badge">
+              <span className="icon">⭐</span>
+              <span>{profile.experienceYears} שנות ניסיון</span>
+            </div>
+          )}
         </div>
 
         {profile.bio && (
@@ -148,20 +154,6 @@ export default function MusicianProfile() {
                   <span key={idx} className="tag event-tag">{ev}</span>
                 ))}
               </div>
-            </section>
-          )}
-
-          {profile.experience && (
-            <section className="profile-section">
-              <h2 className="section-title">ניסיון</h2>
-              <p className="info-text">{profile.experience}</p>
-            </section>
-          )}
-
-          {profile.region && (
-            <section className="profile-section">
-              <h2 className="section-title">אזור פעילות</h2>
-              <p className="info-text">{profile.region}</p>
             </section>
           )}
         </div>

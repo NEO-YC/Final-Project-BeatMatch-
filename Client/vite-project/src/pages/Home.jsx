@@ -216,7 +216,7 @@ const Home = ({ isLoggedIn, isMusician, userName }) => {
                   היי {userName || "מוזיקאי"} 👋
                 </p>
                 <p className="home-status-text">
-                  הפרופיל שלך זמין ללקוחות. מומלץ לעדכן תמונות, וידאו ותיאור אישי כדי לבלוט יותר.
+                  הפרופיל שלך פעיל ומוצג ללקוחות פוטנציאליים. המשך ליצור קשרים ולהגיע להזדמנויות חדשות!
                 </p>
                 <div className="home-musician-buttons">
                   <button className="btn primary-btn" onClick={goToEditProfile}>
