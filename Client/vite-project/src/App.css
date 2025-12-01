@@ -1,0 +1,16 @@
+html, body, #root {
+	height: 100%;
+}
+
+.app-shell {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background: transparent;
+}
+
+.app-main {
+	flex: 1 0 auto;
+	display: block;
+}
+

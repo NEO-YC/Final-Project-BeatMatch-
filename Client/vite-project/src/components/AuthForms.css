@@ -4,22 +4,46 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f8fafc;
+  background: linear-gradient(135deg, #fdf4ff 0%, #e0f2fe 50%, #fef3f2 100%);
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* Auth Card */
 .auth-card {
   background: white;
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  border-radius: 28px;
+  box-shadow: 0 12px 48px rgba(236, 72, 153, 0.2), 0 6px 24px rgba(6, 182, 212, 0.15);
+  border: 3px solid transparent;
+  background-clip: padding-box;
   width: 100%;
-  max-width: 500px;
-  padding: 40px;
-  animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 520px;
+  padding: 48px;
+  animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   direction: rtl;
+  position: relative;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 28px;
+  padding: 3px;
+  background: linear-gradient(135deg, #ec4899, #06b6d4, #f472b6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -1;
 }
 
 @keyframes slideIn {
@@ -40,10 +64,14 @@
 }
 
 .auth-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ec4899 0%, #06b6d4 50%, #f472b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
 .auth-subtitle {
@@ -128,10 +156,10 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  background: #f8fbff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 2px 8px rgba(59, 130, 246, 0.15);
-  transform: translateY(-1px);
+  border-color: #06b6d4;
+  background: #f0fdfa;
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.15), 0 4px 16px rgba(236, 72, 153, 0.2);
+  transform: translateY(-2px);
 }
 
 .form-input.error {

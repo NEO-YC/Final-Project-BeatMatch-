@@ -39,6 +39,13 @@ export default function MusicianCard({ musician }) {
         : musicianProfile.location)
     : 'לא צויין';
 
+
+
+
+
+
+
+    
   return (
     <div className="musician-card">
       <div className="musician-card-header">
