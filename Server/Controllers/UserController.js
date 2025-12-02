@@ -208,6 +208,7 @@ exports.updateMusicianProfile = async function (req, res) {
             musictype,
             experienceYears,
             profilePicture,
+            isSinger,
             eventTypes,
             bio,
             location,
@@ -239,6 +240,7 @@ exports.updateMusicianProfile = async function (req, res) {
                 instrument,
                 musictype,
                 experienceYears,
+                isSinger: !!isSinger,
                 profilePicture,
                 eventTypes: eventTypes || [],
                 bio,
@@ -247,7 +249,8 @@ exports.updateMusicianProfile = async function (req, res) {
                 galleryPictures: galleryPictures || [],
                 galleryVideos: galleryVideos || [],
                 youtubeLinks: youtubeLinks || [],
-                availability: []
+                availability: [],
+                isActive: false
             });
         } else {
             // עדכון פרופיל קיים
@@ -255,6 +258,7 @@ exports.updateMusicianProfile = async function (req, res) {
             if (instrument !== undefined) profile.instrument = instrument;
             if (musictype !== undefined) profile.musictype = musictype;
             if (experienceYears !== undefined) profile.experienceYears = experienceYears;
+            if (isSinger !== undefined) profile.isSinger = !!isSinger;
             if (profilePicture !== undefined) profile.profilePicture = profilePicture;
             if (eventTypes !== undefined) profile.eventTypes = eventTypes;
             if (bio !== undefined) profile.bio = bio;
@@ -431,6 +435,191 @@ exports.uploadToCloudinary = async function (req, res) {
 
 
 
+// Helpers for PayPal
+const PAYPAL_BASE = (process.env.PAYPAL_ENV === 'live') ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+
+async function getPayPalAccessToken() {
+    const client = process.env.PAYPAL_CLIENT_ID;
+    const secret = process.env.PAYPAL_SECRET;
+    if (!client || !secret) throw new Error('PayPal credentials not configured');
+    const auth = Buffer.from(`${client}:${secret}`).toString('base64');
+
+    const resp = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'grant_type=client_credentials'
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error_description || 'Failed to obtain PayPal access token');
+    return data.access_token;
+}
+
+// יצירת הזמנה בפייפאל (מחזיר approval_url)
+exports.createPayPalOrder = async function (req, res) {
+    try {
+        const userId = req.userId;
+        const { amount, currency } = req.body;
+        const value = (amount && String(amount)) || process.env.PROFILE_ACTIVATION_AMOUNT || '9.99';
+        const curr = (currency && String(currency)) || process.env.PROFILE_ACTIVATION_CURRENCY || 'USD';
+        const token = await getPayPalAccessToken();
+
+        const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+        const orderResp = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                intent: 'CAPTURE',
+                purchase_units: [{
+                    amount: { currency_code: curr, value },
+                    custom_id: userId,
+                    description: 'הפעלת פרופיל מוזיקאי'
+                }],
+                application_context: {
+                    return_url: `${frontend}/payment-success`,
+                    cancel_url: `${frontend}/payment-cancel`
+                }
+            })
+        });
+
+        const orderData = await orderResp.json();
+        if (!orderResp.ok) {
+            console.error('PayPal create order failed:', orderData);
+            return res.status(500).json({ message: 'Failed to create PayPal order', error: orderData });
+        }
+
+        const approveLink = (orderData.links || []).find(l => l.rel === 'approve');
+
+        // Persist a pending payment entry (if user exists)
+        try {
+            const user = await User.findById(userId);
+            if (user) {
+                if (!Array.isArray(user.musicianProfile)) user.musicianProfile = [];
+                if (user.musicianProfile.length === 0) user.musicianProfile.push({ profilePicture: '', galleryPictures: [], galleryVideos: [], availability: [], isActive: false });
+                await user.save();
+            }
+        } catch (err) {
+            console.error('Failed to persist pending payment:', err);
+        }
+
+        res.status(200).json({ orderId: orderData.id, approvalUrl: approveLink ? approveLink.href : null });
+    } catch (error) {
+        console.error('createPayPalOrder error:', error);
+        res.status(500).json({ message: 'שגיאה ביצירת תשלום', error: error.message });
+    }
+};
+
+// Capture order (synchronous flow after redirect)
+exports.capturePayPalOrder = async function (req, res) {
+    try {
+        const userId = req.userId;
+        const { orderId } = req.body;
+        if (!orderId) return res.status(400).json({ message: 'orderId required' });
+
+        const token = await getPayPalAccessToken();
+        const capResp = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+        });
+        const capData = await capResp.json();
+        if (!capResp.ok) {
+            console.error('PayPal capture failed:', capData);
+            return res.status(500).json({ message: 'Failed to capture order', error: capData });
+        }
+
+        // On success, mark user profile as active
+        try {
+            const user = await User.findById(userId);
+            if (user) {
+                if (!Array.isArray(user.musicianProfile)) user.musicianProfile = [];
+                if (user.musicianProfile.length === 0) user.musicianProfile.push({ profilePicture: '', galleryPictures: [], galleryVideos: [], availability: [], isActive: false });
+                const profile = user.musicianProfile[0];
+                profile.isActive = true;
+                await user.save();
+            }
+        } catch (err) {
+            console.error('Failed to update user after capture:', err);
+        }
+
+        res.status(200).json({ message: 'Payment captured and profile activated', capture: capData });
+    } catch (error) {
+        console.error('capturePayPalOrder error:', error);
+        res.status(500).json({ message: 'שגיאה בתקיפת הזמנה', error: error.message });
+    }
+};
+
+// Webhook endpoint to receive PayPal async notifications
+exports.handlePayPalWebhook = async function (req, res) {
+    try {
+        const body = req.body;
+        // Minimal handling: look for order ID and try to activate corresponding user
+        const eventType = body.event_type || body.eventType || '';
+        console.log('PayPal webhook received:', eventType);
+
+        // Try to find order id in resource
+        const resource = body.resource || {};
+        const orderId = resource.id || (resource.supplementary_data && resource.supplementary_data.related_ids && resource.supplementary_data.related_ids.order_id) || (resource.order_id) || null;
+
+        // If we don't have orderId but have purchase_units in resource, try to extract custom_id
+        let customUserId = null;
+        try {
+            if (resource.purchase_units && resource.purchase_units[0] && resource.purchase_units[0].custom_id) {
+                customUserId = resource.purchase_units[0].custom_id;
+            }
+            if (!customUserId && resource.custom_id) customUserId = resource.custom_id;
+        } catch (e) {}
+
+        // If we have orderId and/or customUserId, try to mark profile active
+        if (customUserId || orderId) {
+            // if we only have orderId, try to fetch order details to get custom_id
+            let userId = customUserId;
+            if (!userId && orderId) {
+                try {
+                    const token = await getPayPalAccessToken();
+                    const orderResp = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}`, { headers: { Authorization: `Bearer ${token}` } });
+                    const orderData = await orderResp.json();
+                    if (orderData.purchase_units && orderData.purchase_units[0] && orderData.purchase_units[0].custom_id) userId = orderData.purchase_units[0].custom_id;
+                } catch (e) {
+                    console.error('Failed to fetch order to get custom_id:', e);
+                }
+            }
+
+            if (userId) {
+                try {
+                    const user = await User.findById(userId);
+                    if (user) {
+                        if (!Array.isArray(user.musicianProfile)) user.musicianProfile = [];
+                        if (user.musicianProfile.length === 0) user.musicianProfile.push({ profilePicture: '', galleryPictures: [], galleryVideos: [], availability: [], isActive: false });
+                        const profile = user.musicianProfile[0];
+                        // mark active if event indicates capture/completion
+                        if (eventType.includes('CAPTURE') || eventType.includes('COMPLETED') || eventType.includes('APPROVED')) {
+                            profile.isActive = true;
+                        }
+                        await user.save();
+                        console.log('Activated profile via webhook for user', userId);
+                    }
+                } catch (err) {
+                    console.error('Failed to activate profile via webhook:', err);
+                }
+            }
+        }
+
+        res.status(200).send('OK');
+    } catch (error) {
+        console.error('handlePayPalWebhook error:', error);
+        res.status(500).send('Webhook handling error');
+    }
+};
+
+
+
+
 
 
 
@@ -512,19 +701,30 @@ exports.getMusicianProfile = async function (req, res) {
     try {
         const userId = req.params.userId || req.userId;
 
+        console.log('[getMusicianProfile] Loading profile for userId:', userId);
+
         // מציאת המשתמש
         const user = await User.findById(userId);
         if (!user) {
+            console.log('[getMusicianProfile] User not found');
             return res.status(404).json({ "message": "משתמש לא נמצא" });
         }
 
+        console.log('[getMusicianProfile] User found:', user.email);
+        console.log('[getMusicianProfile] isMusician:', user.isMusician);
+        console.log('[getMusicianProfile] musicianProfile length:', user.musicianProfile?.length);
+
         // בדיקה שהמשתמש הוא מוזיקאי ויש לו פרופיל
         if (!user.isMusician || user.musicianProfile.length === 0) {
+            console.log('[getMusicianProfile] Not a musician or no profile');
             return res.status(404).json({ 
                 "message": "משתמש זה אינו מוזיקאי או אין לו פרופיל" 
             });
         }
 
+        console.log('[getMusicianProfile] Returning profile with isActive:', user.musicianProfile[0].isActive);
+
+        // החזר אובייקט פרופיל (לא מערך) לשמירה על תאימות עם הקליינט
         res.status(200).json({
             "user": {
                 _id: user._id,
@@ -537,6 +737,7 @@ exports.getMusicianProfile = async function (req, res) {
         });
 
     } catch (error) {
+        console.error('[getMusicianProfile] Error:', error);
         res.status(500).json({ 
             "message": "שגיאה בטעינת פרופיל", 
             "error": error.message 
@@ -563,18 +764,26 @@ exports.getMusicianProfile = async function (req, res) {
 exports.searchMusicians = async function (req, res) {
     try {
         // פרמטרים יכולים להגיע כ-array (repeated params) או כמחרוזת מופרדת בפסיקים
-        const { musictype, location, instrument, eventTypes, region, q } = req.query;
+        const { musictype, location, instrument, eventTypes, region, q, singer } = req.query;
 
         console.log('[searchMusicians] Received params:', { musictype, location, instrument, eventTypes, region, q });
 
-        // בניית query בסיסי - רק מוזיקאים
-        let query = { isMusician: true };
+        // בניית query בסיסי - רק מוזיקאים פעילים (ששילמו)
+        let query = { 
+            isMusician: true
+        };
+        
+        // הוסף תנאי שהפרופיל פעיל - חובה!
+        // נבדוק שיש לפחות אלמנט אחד במערך musicianProfile עם isActive: true
+        query.musicianProfile = { $elemMatch: { isActive: true } };
 
         // עזר להמיר לפרמטרים רלוונטיים (array of strings)
         const toArray = (v) => {
             if (!v) return [];
-            if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
-            return String(v).split(',').map(x => x.trim()).filter(Boolean);
+            let arr = Array.isArray(v) ? v.map(x => String(x).trim()) : String(v).split(',').map(x => x.trim());
+            // Remove any 'all' markers (Hebrew/English) since that means no filter
+            arr = arr.filter(Boolean).filter(x => !['הכל', 'all', 'All', 'ALL'].includes(x));
+            return arr;
         };
 
         // חיפוש לפי שם מוזיקאי (q) - חיפוש ברמת המשתמש (לא בתוך musicianProfile)
@@ -614,6 +823,14 @@ exports.searchMusicians = async function (req, res) {
             query['musicianProfile.eventTypes'] = { $in: events.map(e => new RegExp(e, 'i')) };
         }
 
+        // filter by singer flag if requested (singer=true)
+        if (singer !== undefined) {
+            const wantSinger = (String(singer).toLowerCase() === 'true' || String(singer) === '1');
+            if (wantSinger) {
+                query['musicianProfile.isSinger'] = true;
+            }
+        }
+
         // אזור/מיקום: location בתוך musicianProfile הוא מערך של מחרוזות
         // צריך לחפש אלמנט שמכיל את האזור הרצוי
         // שים לב: המיקומים נשמרים באנגלית בדאטהבייס (north/center/south)
@@ -638,14 +855,18 @@ exports.searchMusicians = async function (req, res) {
         // ביצוע החיפוש ללא החזרת סיסמאות
         const musicians = await User.find(query).select('-password');
 
+        console.log('[searchMusicians] Query executed:', JSON.stringify(query, null, 2));
+        console.log('[searchMusicians] Found musicians count:', musicians.length);
+
         // Diagnostic log: show sample fields to verify data presence
         if (musicians && musicians.length) {
             const m = musicians[0];
-            console.log('[searchMusicians] Found', musicians.length, 'musicians. Sample:', {
+            console.log('[searchMusicians] Sample musician:', {
                 _id: m._id?.toString(),
                 firstname: m.firstname,
                 lastname: m.lastname,
                 phone: m.phone,
+                isActive: Array.isArray(m.musicianProfile) && m.musicianProfile[0] ? m.musicianProfile[0].isActive : undefined,
                 location: Array.isArray(m.musicianProfile) && m.musicianProfile[0] ? m.musicianProfile[0].location : undefined,
                 profilePicture: Array.isArray(m.musicianProfile) && m.musicianProfile[0] ? m.musicianProfile[0].profilePicture : undefined,
             });

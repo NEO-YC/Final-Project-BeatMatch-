@@ -28,18 +28,26 @@ export default function CreateMusicianProfile() {
 
   // רשימת סגנונות מוזיקליים לבחירה (ניתן לבחור יותר מאחד)
   const musicStyles = [
-    'חסידי',
-    'ליטאי',
-    'דתי לאומי',
+    // סדר לפי נפוצות - מתחיל בפופ ורוק
+    'פופ',
+    'רוק',
+    'ישראלי',
+    'ים תיכוני',
+    'אלקטרוני',
+    'אינדי',
+    'ג' + "'" + 'אז',
+    'עממי',
     'מזרחי',
     'פיוטים',
-    'עממי',
-    'ים תיכוני',
-    'ישראלי'
+    'חסידי',
+    'דתי לאומי',
+    // אפשרות כללית בסוף
+    'הכל'
   ];
 
   // רשימת כלי נגינה - תואם לחיפוש ב-Home
   const INSTRUMENT_OPTIONS = [
+    'זמר',
     "גיטרה אקוסטית",
     "גיטרה חשמלית",
     "גיטרה בס",
@@ -320,9 +328,12 @@ export default function CreateMusicianProfile() {
           return;
         }
 
+        const instrumentStr = (form.instrument || selectedInstruments.join(', ')) || '';
         const payload = {
-          instrument: form.instrument || selectedInstruments.join(', '),
+          instrument: instrumentStr,
           musictype: form.musictype || selectedStyles.join(', '),
+          // derive isSinger from selected instruments (if user chose 'זמר')
+          isSinger: instrumentStr.split(',').map(s=>s.trim()).some(s => s === 'זמר' || s === 'זמר/ת'),
           experienceYears: form.experienceYears || '0',
           eventTypes: form.eventTypes ? form.eventTypes.split(',').map(x => x.trim()).filter(Boolean) : selectedEventTypes,
           bio: form.bio || '',
@@ -375,6 +386,7 @@ export default function CreateMusicianProfile() {
                 )}
               </div>
             </div>
+            
             {profilePicture && (
               <div className="action-row" style={{ justifyContent: 'center', marginTop: 8 }}>
                 <button

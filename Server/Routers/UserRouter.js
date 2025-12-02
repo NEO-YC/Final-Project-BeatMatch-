@@ -14,6 +14,9 @@ const {
     updateAvailability,
     getMusicianProfile,
     searchMusicians,
+    createPayPalOrder,
+    capturePayPalOrder,
+    handlePayPalWebhook,
     deleteUser
 } = require('../Controllers/UserController');
 
@@ -44,6 +47,12 @@ router.put('/musician/availability', authenticateToken, updateAvailability);
 router.get('/upload-signature', authenticateToken, getUploadSignature);
 // upload single file to Cloudinary 
 router.post('/upload', authenticateToken, upload.single('file'), uploadToCloudinary);
+
+// PayPal payment flow
+router.post('/payments/create', authenticateToken, createPayPalOrder);
+router.post('/payments/capture', authenticateToken, capturePayPalOrder);
+// Webhook (public)
+router.post('/payments/webhook', express.json({ type: '*/*' }), handlePayPalWebhook);
 
 // קבלת הפרופיל שלי (המשתמש המחובר)
 router.get('/me/musician-profile', authenticateToken, getMusicianProfile);

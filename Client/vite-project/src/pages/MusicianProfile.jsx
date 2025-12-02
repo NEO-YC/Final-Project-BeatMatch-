@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './MusicianProfile.css';
+import api from '../services/api';
 
 export default function MusicianProfile() {
   const { id } = useParams();
@@ -12,9 +13,7 @@ export default function MusicianProfile() {
   useEffect(() => {
     async function fetchMusician() {
       try {
-        const res = await fetch(`http://127.0.0.1:3000/user/musicians/${id}`);
-        if (!res.ok) throw new Error('המוזיקאי לא נמצא');
-        const data = await res.json();
+        const data = await api.getMusicianById(id);
         setMusician(data);
       } catch (err) {
         console.error(err);
@@ -51,7 +50,7 @@ export default function MusicianProfile() {
   const profile = musician.musicianProfile || {};
 
   const instruments = profile.instrument
-    ? (Array.isArray(profile.instrument) ? profile.instrument : [profile.instrument])
+    ? (Array.isArray(profile.instrument) ? profile.instrument : String(profile.instrument).split(',').map(i => i.trim()).filter(Boolean))
     : [];
 
   const genres = profile.musictype
@@ -103,17 +102,27 @@ export default function MusicianProfile() {
               </div>
             )}
           </div>
-          <h1 className="profile-name">{firstname} {lastname}</h1>
+          <h1 className="profile-name">
+            {firstname} {lastname}
+            {profile.isActive && <span className="pro-badge">✨ PRO</span>}
+          </h1>
           <div className="profile-location-main">
             <span className="icon">📍</span>
             <span>{location}</span>
           </div>
-          {profile.experienceYears && (
-            <div className="profile-experience-badge">
-              <span className="icon">⭐</span>
-              <span>{profile.experienceYears} שנות ניסיון</span>
-            </div>
-          )}
+          <div style={{display:'flex',gap:12,justifyContent:'center',alignItems:'center',marginTop:8}}>
+            {profile.experienceYears && (
+              <div className="profile-experience-badge">
+                <span className="icon">⭐</span>
+                <span>{profile.experienceYears} שנות ניסיון</span>
+              </div>
+            )}
+            {(profile.isSinger || instruments.some(i => i === 'זמר' || i === 'זמר/ת')) && (
+              <div className="profile-singer-badge" title="זמר/ת">
+                🎤 זמר/ת
+              </div>
+            )}
+          </div>
         </div>
 
         {profile.bio && (

@@ -3,10 +3,28 @@ import './Search.css';
 import MusicianCard from '../components/MusicianCard';
 
 const SUGGESTED_INSTRUMENTS = [
-  "גיטרה אקוסטית","גיטרה חשמלית","גיטרה בס","פסנתר","קלידים / אורגן","כינור","תופים","דרבוקה","קחון","טמבורין","בונגו","קונגה","תופי מרים","סקסופון","קלרינט","חצוצרה","טרומבון","חליל צד","חליל ערבי (ניי)","עוד","בוזוקי","קאנון","די.ג'יי",
+  "זמר","גיטרה אקוסטית","גיטרה חשמלית","גיטרה בס","פסנתר","קלידים / אורגן","כינור","תופים","דרבוקה","קחון","טמבורין","בונגו","קונגה","תופי מרים","סקסופון","קלרינט","חצוצרה","טרומבון","חליל צד","חליל ערבי (ניי)","עוד","בוזוקי","קאנון","די.ג'יי",
 ];
-const SUGGESTED_GENRES = ['ישראלי','ים תיכוני','עממי','פיוטים','מזרחי','דתי לאומי','ליטאי','חסידי'];
+// סדר סגנונות לפי נפוצות כדי שהממשק יציג תחילה את הפופולריים
+const SUGGESTED_GENRES = [
+  'פופ',
+  'רוק',
+  'ישראלי',
+  'ים תיכוני',
+  'אלקטרוני',
+  'אינדי',
+  'ג' + "'" + 'אז',
+  'עממי',
+  'מזרחי',
+  'פיוטים',
+  'חסידי',
+  'דתי לאומי',
+  // אופציית הכל (ניתן לבחור כדי לנטרל סינון)
+  'הכל'
+];
 const SUGGESTED_EVENTS = ['חתונה','בר מצווה','שבת חתן','ברית','אירוע אירוסין','יום הולדת','חינה','אירוע משפחתי','אירוע חברה','טקס / כנס','מופע קהילתי','קבלת פנים','חפלה','שירה בציבור','הופעה חיה'];
+// הוסף אופציית 'הכל' גם לרשימת אירועים
+SUGGESTED_EVENTS.unshift('הכל');
 
 export default function Search(){
   const [query, setQuery] = useState('');
@@ -29,16 +47,25 @@ export default function Search(){
   ,[instrumentInput, instruments]);
 
   const genreSuggestions = useMemo(() =>
-    SUGGESTED_GENRES.filter(g => g.toLowerCase().includes(genreInput.toLowerCase()) && !genres.includes(g))
+    SUGGESTED_GENRES.filter(g => g === 'הכל' || g.toLowerCase().includes(genreInput.toLowerCase()) && !genres.includes(g))
   ,[genreInput, genres]);
 
   const eventSuggestions = useMemo(() =>
-    SUGGESTED_EVENTS.filter(e => e.toLowerCase().includes(eventInput.toLowerCase()) && !events.includes(e))
+    SUGGESTED_EVENTS.filter(e => e === 'הכל' || e.toLowerCase().includes(eventInput.toLowerCase()) && !events.includes(e))
   ,[eventInput, events]);
 
   function addTag(setter, value){
     if(!value) return;
-    setter(prev => (prev.includes(value) ? prev : [...prev, value]));
+    // אם בוחרים 'הכל' - נרוק את הרשימה ונוסיף רק את 'הכל'
+    if (value === 'הכל') {
+      setter(['הכל']);
+      return;
+    }
+    // אם כבר קיים 'הכל' - הסר אותו כשמוסיפים ערכים ספציפיים
+    setter(prev => {
+      const withoutAll = prev.filter(p => p !== 'הכל');
+      return (withoutAll.includes(value) ? withoutAll : [...withoutAll, value]);
+    });
   }
 
   function removeTag(setter, value){

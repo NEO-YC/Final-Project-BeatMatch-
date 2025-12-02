@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema({
       galleryPictures:  [{ type: String, trim: true }],
       galleryVideos:    [{ type: String, trim: true }],
       youtubeLinks:     [{ type: String, trim: true }],
+      // האם המשתמש הוא זמר (vocalist) - שימוש ל-filter ותצוגה
+      isSinger:          { type: Boolean, default: false },
 
       availability: {
         type: [{
@@ -33,6 +35,9 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
       }
+      ,
+      // האם הפרופיל מוזיקאי פעיל (שניתן לראות בחיפוש) - פעיל לאחר תשלום
+      isActive: { type: Boolean, default: false }
     }],
     default: []
   }

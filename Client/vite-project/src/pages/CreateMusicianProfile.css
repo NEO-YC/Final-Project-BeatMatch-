@@ -240,3 +240,98 @@
 .cm-actions button { padding:10px 14px; border-radius:6px; border:0; cursor:pointer }
 .cm-error { color:#b00020; margin-bottom:8px }
 .cm-success { color:#0b7a3f; margin-bottom:8px }
+
+/* Payment Activation Section */
+.payment-activation-section {
+  display: flex;
+  justify-content: center;
+  margin: 32px 0;
+  padding: 20px;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-info-box {
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3f2 100%);
+  border: 2px solid #f97316;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(249, 115, 22, 0.2);
+  transition: all 0.3s ease;
+}
+
+.payment-info-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(249, 115, 22, 0.3);
+}
+
+.payment-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.payment-info-box h3 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ea580c;
+  margin: 0 0 12px 0;
+}
+
+.payment-info-box p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #78350f;
+  margin: 0 0 24px 0;
+}
+
+.payment-info-box p strong {
+  color: #ea580c;
+  font-weight: 700;
+}
+
+.payment-btn {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 16px 40px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+  transition: all 0.3s ease;
+  animation: paymentPulse 2s ease-in-out infinite;
+}
+
+.payment-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.5);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+}
+
+@keyframes paymentPulse {
+  0%, 100% { 
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+  }
+  50% { 
+    box-shadow: 0 12px 36px rgba(249, 115, 22, 0.6);
+  }
+}

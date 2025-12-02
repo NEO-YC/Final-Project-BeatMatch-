@@ -138,6 +138,87 @@
   box-shadow: 0 14px 48px rgba(6, 182, 212, 0.3);
 }
 
+/* Unpaid Musician Card */
+.home-status-card.unpaid-musician {
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3f2 100%);
+  border: 2px solid #f97316;
+  box-shadow: 0 10px 32px rgba(249, 115, 22, 0.25);
+}
+
+.home-status-card.unpaid-musician:hover {
+  box-shadow: 0 14px 48px rgba(249, 115, 22, 0.35);
+}
+
+.home-status-card.unpaid-musician .home-status-title {
+  color: #ea580c;
+  font-size: 24px;
+}
+
+.home-status-card.unpaid-musician .home-status-text {
+  color: #78350f;
+  font-weight: 500;
+}
+
+.payment-highlight {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border: none;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+  animation: paymentPulse 2s ease-in-out infinite;
+}
+
+.payment-highlight:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.5);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+}
+
+@keyframes paymentPulse {
+  0%, 100% { 
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+  }
+  50% { 
+    box-shadow: 0 12px 36px rgba(249, 115, 22, 0.6);
+  }
+}
+
+/* PRO Badges */
+.pro-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 8px;
+  margin-right: 8px;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+  animation: proBadgeShine 2s ease-in-out infinite;
+  letter-spacing: 1px;
+}
+
+.pro-badge-small {
+  display: inline-block;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-right: 6px;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+@keyframes proBadgeShine {
+  0%, 100% { 
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+  }
+  50% { 
+    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.6);
+  }
+}
+
 .home-status-title {
   font-size: 22px;
   font-weight: 800;
@@ -193,6 +274,24 @@
   color: #475569;
   margin: 16px 0 24px 0;
   font-weight: 500;
+}
+
+.home-musician-description {
+  font-size: 20px;
+  line-height: 1.6;
+  color: #334155;
+  margin: 16px 0 28px 0;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.home-status-description {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #475569;
+  margin: 12px 0 24px 0;
+  font-weight: 500;
+  letter-spacing: 0.1px;
 }
 
 .home-musician-buttons {
@@ -360,6 +459,350 @@
 /* ================================
    ABOUT SECTION
    ================================ */
+.home-about-section {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  padding: 50px;
+  margin: 60px auto;
+  max-width: 1100px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15);
+  border: 2px solid rgba(6, 182, 212, 0.1);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* ================================
+   PRO EXCLUSIVE SECTION
+   ================================ */
+.home-pro-exclusive {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
+  padding: 60px 40px;
+  margin: 60px auto;
+  max-width: 1100px;
+  border-radius: 30px;
+  text-align: center;
+  box-shadow: 0 12px 48px rgba(251, 191, 36, 0.4);
+  border: 3px solid #f59e0b;
+  animation: proSectionGlow 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-pro-exclusive::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  animation: proRotate 8s linear infinite;
+}
+
+@keyframes proSectionGlow {
+  0%, 100% { 
+    box-shadow: 0 12px 48px rgba(251, 191, 36, 0.4);
+  }
+  50% { 
+    box-shadow: 0 16px 64px rgba(251, 191, 36, 0.6);
+  }
+}
+
+@keyframes proRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pro-exclusive-content {
+  position: relative;
+  z-index: 1;
+}
+
+.pro-badge-large {
+  display: inline-block;
+  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+  color: #fef3c7;
+  font-size: 16px;
+  font-weight: 900;
+  padding: 10px 30px;
+  border-radius: 50px;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 16px rgba(120, 53, 15, 0.5);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.pro-exclusive-title {
+  font-size: 38px;
+  font-weight: 900;
+  margin: 0 0 20px 0;
+  color: #78350f;
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+}
+
+.pro-exclusive-text {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #92400e;
+  margin: 0 0 40px 0;
+  max-width: 750px;
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 600;
+}
+
+.pro-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.pro-benefit-item {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 25px 20px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.pro-benefit-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.pro-benefit-icon {
+  font-size: 32px;
+}
+
+.pro-benefit-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #78350f;
+  text-align: center;
+}
+
+.pro-badge-home {
+  display: inline-block;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: 10px;
+  margin-right: 12px;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.5);
+  animation: proBadgeShine 2s ease-in-out infinite;
+}
+
+/* ================================
+   UPGRADE TO PRO BANNER
+   ================================ */
+.home-upgrade-banner {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+  padding: 50px 40px;
+  margin: 60px auto;
+  max-width: 1200px;
+  border-radius: 30px;
+  box-shadow: 0 16px 64px rgba(124, 58, 237, 0.5);
+  border: 3px solid #a855f7;
+  position: relative;
+  overflow: hidden;
+  animation: bannerPulse 3s ease-in-out infinite;
+}
+
+@keyframes bannerPulse {
+  0%, 100% { 
+    box-shadow: 0 16px 64px rgba(124, 58, 237, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 20px 80px rgba(124, 58, 237, 0.7);
+    transform: scale(1.02);
+  }
+}
+
+.home-upgrade-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  animation: upgradeRotate 10s linear infinite;
+}
+
+@keyframes upgradeRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.upgrade-banner-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 40px;
+  align-items: center;
+}
+
+.upgrade-banner-icon {
+  font-size: 80px;
+  animation: iconBounce 2s ease-in-out infinite;
+}
+
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.upgrade-banner-text {
+  text-align: right;
+}
+
+.upgrade-banner-title {
+  font-size: 36px;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
+}
+
+.upgrade-banner-subtitle {
+  font-size: 18px;
+  color: #fce7f3;
+  margin: 0 0 24px 0;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.upgrade-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.upgrade-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.upgrade-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.upgrade-banner-cta {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 30px 25px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.upgrade-price {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upgrade-price-amount {
+  font-size: 42px;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -1px;
+}
+
+.upgrade-price-period {
+  font-size: 14px;
+  color: #fce7f3;
+  font-weight: 600;
+}
+
+.upgrade-btn {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  font-size: 20px;
+  font-weight: 900;
+  padding: 18px 36px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.5);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.upgrade-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.upgrade-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.upgrade-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(251, 191, 36, 0.7);
+}
+
+.upgrade-btn:active {
+  transform: translateY(-1px);
+}
+
+.upgrade-btn-text {
+  position: relative;
+  z-index: 1;
+}
+
+.upgrade-guarantee {
+  font-size: 13px;
+  color: #fce7f3;
+  margin: 0;
+  font-weight: 500;
+}
+
 .home-about-section {
   background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
   padding: 50px;
@@ -718,6 +1161,27 @@
   background-clip: text;
 }
 
+/* Sections for different audiences */
+.how-section {
+  margin-bottom: 50px;
+}
+
+.how-section:last-child {
+  margin-bottom: 0;
+}
+
+.how-section-title {
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center;
+  margin: 0 0 30px 0;
+  color: #1e293b;
+}
+
+.musician-section .how-section-title {
+  color: #f97316;
+}
+
 .how-steps {
   display: flex;
   align-items: center;
@@ -887,6 +1351,47 @@
     font-size: 32px;
   }
 
+  .home-pro-exclusive {
+    padding: 50px 30px;
+    margin: 60px 20px;
+  }
+
+  .pro-exclusive-title {
+    font-size: 32px;
+  }
+
+  .pro-benefits-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .home-upgrade-banner {
+    padding: 40px 30px;
+    margin: 60px 20px;
+  }
+
+  .upgrade-banner-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    text-align: center;
+  }
+
+  .upgrade-banner-icon {
+    font-size: 60px;
+  }
+
+  .upgrade-banner-text {
+    text-align: center;
+  }
+
+  .upgrade-banner-title {
+    font-size: 28px;
+  }
+
+  .upgrade-features {
+    grid-template-columns: 1fr;
+  }
+
   .home-musicians-gallery {
     padding: 60px 24px;
   }
@@ -947,6 +1452,44 @@
 
   .home-musician-buttons .btn {
     width: 100%;
+  }
+
+  .home-pro-exclusive {
+    padding: 40px 20px;
+  }
+
+  .pro-exclusive-title {
+    font-size: 28px;
+  }
+
+  .pro-badge-large {
+    font-size: 14px;
+    padding: 8px 20px;
+  }
+
+  .pro-benefits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-upgrade-banner {
+    padding: 30px 20px;
+  }
+
+  .upgrade-banner-title {
+    font-size: 24px;
+  }
+
+  .upgrade-banner-subtitle {
+    font-size: 16px;
+  }
+
+  .upgrade-price-amount {
+    font-size: 36px;
+  }
+
+  .upgrade-btn {
+    font-size: 18px;
+    padding: 16px 32px;
   }
 }
 

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchMusicians } from "../services/api";
+import api from "../services/api";
 import "./Home.css";
 
-const Home = ({ isLoggedIn, isMusician, userName }) => {
+const Home = ({ isLoggedIn, isMusician, user, profileActive: profileActiveProp }) => {
   const navigate = useNavigate();
   const [randomMusicians, setRandomMusicians] = useState([]);
   const [allMusicians, setAllMusicians] = useState([]);
   const [showAll, setShowAll] = useState(false);
   const [loadingMusicians, setLoadingMusicians] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [profileActive, setProfileActive] = useState(profileActiveProp === true);
   const cardsToShow = 3;
 
   useEffect(() => {
@@ -30,8 +32,10 @@ const Home = ({ isLoggedIn, isMusician, userName }) => {
     loadRandomMusicians();
   }, []);
 
+
+
   const goToSearch = () => navigate("/search");
-  const goToLogin = () => navigate("/register");
+  const goToLogin = () => navigate("/login");
   const goToMusicianSignup = () => navigate("/register");
   const goToEditProfile = () => navigate("/musician/edit");
   const goToCreateProfile = () => navigate("/musician/create");
@@ -95,7 +99,10 @@ const Home = ({ isLoggedIn, isMusician, userName }) => {
                     )}
                   </div>
                   <div className="musician-card-content">
-                    <h3>{fullName}</h3>
+                    <h3>
+                      {fullName}
+                      {profile.isActive && <span className="pro-badge-small">PRO</span>}
+                    </h3>
                     <p className="musician-instruments">{instruments.length > 0 ? instruments.join(', ') : 'מוזיקאי'}</p>
                     <p className="musician-location">📍 {locationText}</p>
                     {genres.length > 0 && (
@@ -152,7 +159,10 @@ const Home = ({ isLoggedIn, isMusician, userName }) => {
                       )}
                     </div>
                     <div className="musician-card-content">
-                      <h3>{fullName}</h3>
+                      <h3>
+                        {fullName}
+                        {profile.isActive && <span className="pro-badge-small">PRO</span>}
+                      </h3>
                       <p className="musician-instruments">{instruments.length > 0 ? instruments.join(', ') : 'מוזיקאי'}</p>
                       <p className="musician-location">📍 {locationText}</p>
                       {genres.length > 0 && (
@@ -208,67 +218,30 @@ const Home = ({ isLoggedIn, isMusician, userName }) => {
             <strong>הפכו את האירוע הבא שלכם לחוויה מוזיקלית שלא תישכח!</strong>
           </p>
 
-          {/* טקסט לפי מצב התחברות */}
-          {isLoggedIn ? (
-            isMusician ? (
-              <div className="home-status-card">
-                <p className="home-status-title">
-                  היי {userName || "מוזיקאי"} 👋
-                </p>
-                <p className="home-status-text">
-                  הפרופיל שלך פעיל ומוצג ללקוחות פוטנציאליים. המשך ליצור קשרים ולהגיע להזדמנויות חדשות!
-                </p>
-                <div className="home-musician-buttons">
-                  <button className="btn primary-btn" onClick={goToEditProfile}>
-                    ערוך פרופיל
-                  </button>
-                  <button className="btn secondary-btn" onClick={goToSearch}>
-                    צפה במוזיקאים אחרים
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="home-status-card">
-                <p className="home-status-title">היי {userName || "אורח"} 👋</p>
-                <p className="home-status-text">
-                  מחפש מוזיקה חיה לאירוע? בוא נתחיל בחיפוש ונמצא את המוזיקאים שיתאימו לך.
-                </p>
-                <div className="home-musician-buttons" style={{marginTop: '20px'}}>
-                  <button className="btn primary-btn" onClick={goToSearch}>
-                    חפש מוזיקאים
-                  </button>
-                  <button className="btn secondary-btn" onClick={goToEditProfile}>
-                    ערוך פרופיל
-                  </button>
-                </div>
-              </div>
-            )
-          ) : (
+          {!isLoggedIn ? (
             <div className="home-musician-cta">
               <span className="home-musician-label">🎸 מוזיקאי?</span>
-              <p className="home-musician-text">
-                התחבר או הירשם כדי שיכירו אותך, יצפו בקליפים שלך, יוסיפו אותך למועדפים ויזמינו אותך להופיע.
+              <p className="home-musician-description">
+                הצטרף לקהילת המוזיקאים שלנו! צור פרופיל מקצועי, הצג את היכולות שלך והגדל את החשיפה שלך
               </p>
               <div className="home-musician-buttons">
-                <button className="btn primary-btn" onClick={goToLogin}>
-                  התחברות
-                </button>
-                <button
-                  className="btn secondary-btn"
-                  onClick={goToMusicianSignup}
-                >
-                  הרשמה למוזיקאים
-                </button>
+                <button className="btn primary-btn" onClick={goToLogin}>התחברות</button>
+                <button className="btn secondary-btn" onClick={goToMusicianSignup}>הרשמה</button>
               </div>
             </div>
-          )}
-
-          {/* כפתור חיפוש ראשי מוצג רק לא מחובר כדי למנוע כפילות */}
-          {!isLoggedIn && (
-            <div className="home-hero-buttons">
-              <button className="btn hero-search-btn" onClick={goToSearch}>
-                🔍 מצא מוזיקאי לאירוע
-              </button>
+          ) : (
+            <div className="home-status-card">
+              <h3 className="home-status-title">
+                היי {user?.displayName || "משתמש"} 👋
+                {profileActive && <span className="pro-badge-home">PRO ⭐</span>}
+              </h3>
+              <p className="home-status-description">
+              כמוזיקאי רשום, אתה יכול לחפש מוזיקאים אחרים ולערוך את הפרופיל שלך:
+              </p>
+              <div className="home-musician-buttons">
+                <button className="btn primary-btn" onClick={goToSearch}>חפש מוזיקאים</button>
+                <button className="btn secondary-btn" onClick={goToEditProfile}>ערוך פרופיל</button>
+              </div>
             </div>
           )}
         </div>
@@ -283,6 +256,81 @@ const Home = ({ isLoggedIn, isMusician, userName }) => {
           </p>
         </div>
       </section>
+
+      {/* Upgrade to PRO Banner - for logged in users who are NOT active */}
+      {isLoggedIn && !profileActive && (
+        <section className="home-upgrade-banner">
+          <div className="upgrade-banner-content">
+            <div className="upgrade-banner-icon">🚀</div>
+            <div className="upgrade-banner-text">
+              <h2 className="upgrade-banner-title">הפוך למוזיקאי PRO היום!</h2>
+              <p className="upgrade-banner-subtitle">
+                קבל חשיפה מקסימלית, הופע בראש תוצאות החיפוש והתבלט מהמתחרים
+              </p>
+              <div className="upgrade-features">
+                <div className="upgrade-feature">
+                  <span className="upgrade-check">✓</span>
+                  <span>פרופיל מוצג בחיפוש</span>
+                </div>
+                <div className="upgrade-feature">
+                  <span className="upgrade-check">✓</span>
+                  <span>תג PRO זהוב בולט</span>
+                </div>
+                <div className="upgrade-feature">
+                  <span className="upgrade-check">✓</span>
+                  <span>עדיפות בתוצאות</span>
+                </div>
+                <div className="upgrade-feature">
+                  <span className="upgrade-check">✓</span>
+                  <span>אמינות מוגברת</span>
+                </div>
+              </div>
+            </div>
+            <div className="upgrade-banner-cta">
+              <div className="upgrade-price">
+                <span className="upgrade-price-amount">רק ₪49</span>
+                <span className="upgrade-price-period">חד פעמי</span>
+              </div>
+              <button className="upgrade-btn" onClick={goToEditProfile}>
+                <span className="upgrade-btn-text">הפעל עכשיו ⚡</span>
+              </button>
+              <p className="upgrade-guarantee">💳 תשלום מאובטח וחד פעמי</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* PRO Member Exclusive Section */}
+      {isLoggedIn && profileActive && (
+        <section className="home-pro-exclusive">
+          <div className="pro-exclusive-content">
+            <div className="pro-badge-large">⭐ PRO MEMBER ⭐</div>
+            <h2 className="pro-exclusive-title">ברוך הבא למועדון האקסקלוסיבי!</h2>
+            <p className="pro-exclusive-text">
+              כמנוי PRO, הפרופיל שלך מוצג בראש תוצאות החיפוש ומקבל חשיפה מקסימלית למארגני אירועים ומפיקים.
+              תודה שבחרת להיות חלק מהקהילה המקצועית של BeatMatch! 🎵
+            </p>
+            <div className="pro-benefits-grid">
+              <div className="pro-benefit-item">
+                <span className="pro-benefit-icon">🔍</span>
+                <span className="pro-benefit-text">חשיפה מקסימלית בחיפוש</span>
+              </div>
+              <div className="pro-benefit-item">
+                <span className="pro-benefit-icon">⚡</span>
+                <span className="pro-benefit-text">תג PRO מיוחד בפרופיל</span>
+              </div>
+              <div className="pro-benefit-item">
+                <span className="pro-benefit-icon">💎</span>
+                <span className="pro-benefit-text">מעמד VIP בפלטפורמה</span>
+              </div>
+              <div className="pro-benefit-item">
+                <span className="pro-benefit-icon">🎯</span>
+                <span className="pro-benefit-text">אמינות מוגברת</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* סקשן: אודות BeatMatch */}
       <section className="home-about-section">
@@ -344,23 +392,52 @@ const Home = ({ isLoggedIn, isMusician, userName }) => {
       {/* איך זה עובד */}
       <section className="home-how-it-works">
         <h2>איך זה עובד?</h2>
-        <div className="how-steps">
-          <div className="step-card">
-            <div className="step-number">1</div>
-            <h4>מתארים את האירוע</h4>
-            <p>מכניסים סוג אירוע, מיקום, תאריך וסגנון מוזיקה מועדף.</p>
+        
+        {/* למארגני אירועים */}
+        <div className="how-section">
+          <h3 className="how-section-title">🎭 למארגני אירועים</h3>
+          <div className="how-steps">
+            <div className="step-card">
+              <div className="step-number">1</div>
+              <h4>מתארים את האירוע</h4>
+              <p>מכניסים סוג אירוע, מיקום, תאריך וסגנון מוזיקה מועדף.</p>
+            </div>
+            <div className="step-arrow">→</div>
+            <div className="step-card">
+              <div className="step-number">2</div>
+              <h4>מגלים מוזיקאים מתאימים</h4>
+              <p>גוללים בין פרופילים, צופים בוידאו, קוראים תיאור ובודקים ניסיון.</p>
+            </div>
+            <div className="step-arrow">→</div>
+            <div className="step-card">
+              <div className="step-number">3</div>
+              <h4>יוצרים קשר וסוגרים</h4>
+              <p>מתקשרים, כותבים או מזמינים – והאירוע שלכם בדרך להיות הרבה יותר שמח.</p>
+            </div>
           </div>
-          <div className="step-arrow">→</div>
-          <div className="step-card">
-            <div className="step-number">2</div>
-            <h4>מגלים מוזיקאים מתאימים</h4>
-            <p>גוללים בין פרופילים, צופים בוידאו, קוראים תיאור ובודקים ניסיון.</p>
-          </div>
-          <div className="step-arrow">→</div>
-          <div className="step-card">
-            <div className="step-number">3</div>
-            <h4>יוצרים קשר וסוגרים</h4>
-            <p>מתקשרים, כותבים או מזמינים – והאירוע שלכם בדרך להיות הרבה יותר שמח.</p>
+        </div>
+
+        {/* למוזיקאים */}
+        <div className="how-section musician-section">
+          <h3 className="how-section-title">🎸 למוזיקאים</h3>
+          <div className="how-steps">
+            <div className="step-card">
+              <div className="step-number">1</div>
+              <h4>נרשמים ומשלימים פרופיל</h4>
+              <p>יוצרים פרופיל מקצועי עם תמונות, סרטונים, ניסיון וסגנונות מוזיקליים.</p>
+            </div>
+            <div className="step-arrow">→</div>
+            <div className="step-card">
+              <div className="step-number">2</div>
+              <h4>מפעילים בתשלום חד-פעמי</h4>
+              <p>תשלום קטן מפרסם את הפרופיל ומאפשר ללקוחות למצוא אתכם בחיפושים.</p>
+            </div>
+            <div className="step-arrow">→</div>
+            <div className="step-card">
+              <div className="step-number">3</div>
+              <h4>מקבלים פניות והזמנות</h4>
+              <p>לקוחות מתעניינים, יוצרים קשר ומזמינים אתכם להופעות ואירועים.</p>
+            </div>
           </div>
         </div>
       </section>

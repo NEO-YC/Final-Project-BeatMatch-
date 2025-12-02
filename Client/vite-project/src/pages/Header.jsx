@@ -7,6 +7,7 @@ import "./Header.css"
 function Header() {
   const [user, setUser] = useState(null)
   const [profilePicture, setProfilePicture] = useState(null)
+  const [isActive, setIsActive] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteStep, setDeleteStep] = useState(1)
@@ -27,14 +28,23 @@ function Header() {
           displayName: displayName
         })
         
-        // Load profile picture from database
+        // Load profile picture and PRO status from database
         try {
           const profile = await api.getMyMusicianProfile()
+          console.log('[Header] Profile response:', profile)
           if (profile && profile.profilePicture) {
             setProfilePicture(profile.profilePicture)
           }
+          if (profile && profile.musicianProfile && profile.musicianProfile.isActive) {
+            console.log('[Header] Setting isActive to TRUE')
+            setIsActive(true)
+          } else {
+            console.log('[Header] Setting isActive to FALSE')
+            setIsActive(false)
+          }
         } catch (err) {
-          console.log('No profile picture available')
+          console.log('[Header] Error loading profile:', err)
+          setIsActive(false)
         }
       } catch (error) {
         console.error('Invalid token:', error)
@@ -42,10 +52,12 @@ function Header() {
         localStorage.removeItem('userName')
         setUser(null)
         setProfilePicture(null)
+        setIsActive(false)
       }
     } else {
       setUser(null)
       setProfilePicture(null)
+      setIsActive(false)
     }
   }
 
@@ -154,7 +166,10 @@ function Header() {
                       {user.displayName.charAt(0).toUpperCase()}
                     </span>
                   )}
-                  <span className="user-name">{user.displayName}</span>
+                  <span className="user-name">
+                    {user.displayName}
+                    {isActive && <span className="pro-badge-header">PRO</span>}
+                  </span>
 
                   <span className={`arrow ${isMenuOpen ? 'open' : ''}`}>▼</span>
                 </button>

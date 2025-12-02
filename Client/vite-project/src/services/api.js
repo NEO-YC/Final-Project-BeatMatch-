@@ -52,6 +52,14 @@ export function getMyMusicianProfile() {
   return request('/me/musician-profile', { method: 'GET' });
 }
 
+export function createPayPalOrder(payload) {
+  return request('/payments/create', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export function capturePayPalOrder(payload) {
+  return request('/payments/capture', { method: 'POST', body: JSON.stringify(payload) });
+}
+
 export function deleteAccount() {
   // מחיקת חשבון משתמש
   return request('/account', { method: 'DELETE' });
@@ -117,4 +125,19 @@ export function searchMusicians(params = {}) {
   return request(path);
 }
 
-export default { register, login, updateMusicianProfile, getMyMusicianProfile, uploadFile, deleteAccount, searchMusicians };
+export function getMusicianById(userId) {
+  return request(`/musicians/${userId}`, { method: 'GET' });
+}
+
+export default { 
+  register, 
+  login, 
+  updateMusicianProfile, 
+  getMyMusicianProfile, 
+  uploadFile, 
+  deleteAccount, 
+  searchMusicians,
+  getMusicianById,
+  createPayPalOrder,
+  capturePayPalOrder
+};

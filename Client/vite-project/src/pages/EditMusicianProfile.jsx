@@ -23,18 +23,26 @@ export default function EditMusicianProfile() {
 
   // רשימת סגנונות מוזיקליים לבחירה
   const musicStyles = [
-    'חסידי',
-    'ליטאי',
-    'דתי לאומי',
+    // סדר לפי נפוצות - מתחיל בפופ ורוק
+    'פופ',
+    'רוק',
+    'ישראלי',
+    'ים תיכוני',
+    'אלקטרוני',
+    'אינדי',
+    'ג' + "'" + 'אז',
+    'עממי',
     'מזרחי',
     'פיוטים',
-    'עממי',
-    'ים תיכוני',
-    'ישראלי'
+    'חסידי',
+    'דתי לאומי',
+    // אפשרות כללית בסוף
+    'הכל'
   ];
 
   // רשימת כלי נגינה
   const INSTRUMENT_OPTIONS = [
+    'זמר',
     "גיטרה אקוסטית",
     "גיטרה חשמלית",
     "גיטרה בס",
@@ -78,6 +86,8 @@ export default function EditMusicianProfile() {
     'שירה בציבור',
     'הופעה חיה'
   ];
+  // לוודא שיש אופציית 'הכל' בראש הרשימה שתופיע בעורך
+  if (!EVENT_OPTIONS.includes('הכל')) EVENT_OPTIONS.unshift('הכל');
 
   // state לשמירת סגנונות שנבחרו
   const [selectedStyles, setSelectedStyles] = useState([]);
@@ -99,6 +109,7 @@ export default function EditMusicianProfile() {
   const [profilePreview, setProfilePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true); // טעינת נתונים ראשונית
+  const [profileActive, setProfileActive] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -181,6 +192,9 @@ export default function EditMusicianProfile() {
           if (profile.profilePicture) {
             setProfilePreview(profile.profilePicture);
           }
+
+          // האם הפרופיל פעיל (נרכש/אושר)
+          setProfileActive(!!profile.isActive);
 
           // טעינת קישורי YouTube אם קיימים
           if (profile.youtubeLinks && Array.isArray(profile.youtubeLinks) && profile.youtubeLinks.length > 0) {
@@ -380,6 +394,7 @@ export default function EditMusicianProfile() {
         const payload = {
           instrument: selectedInstruments.join(', '),
           musictype: selectedStyles.join(', '),
+          isSinger: selectedInstruments.map(s=>s.trim()).some(s => s === 'זמר' || s === 'זמר/ת'),
           experienceYears: form.experienceYears || '0',
           eventTypes: selectedEventTypes,
           bio: form.bio || '',
@@ -459,6 +474,45 @@ export default function EditMusicianProfile() {
           </div>
         </div>
         <div className="profile-hint">לחץ על העיגול כדי להוסיף או לשנות תמונת פרופיל</div>
+
+        {!profileActive && (
+          <div className="payment-activation-section">
+            <div className="payment-info-box">
+              <div className="payment-icon">💳</div>
+              <h3>הפעל את הפרופיל שלך</h3>
+              <p>
+                הפרופיל שלך מוכן, אבל עדיין לא מפורסם באתר.
+                <br />
+                כדי שלקוחות פוטנציאליים יוכלו למצוא אותך בחיפושים ולצפות בפרופיל שלך,
+                <br />
+                <strong>יש להפעיל את הפרופיל בתשלום חד-פעמי.</strong>
+              </p>
+              <button 
+                type="button" 
+                className="btn payment-btn" 
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    const amount = import.meta.env.VITE_PROFILE_ACTIVATION_AMOUNT || '9.99';
+                    const res = await api.createPayPalOrder({ amount });
+                    if (res && res.approvalUrl) {
+                      window.location.href = res.approvalUrl;
+                    } else {
+                      setError('לא ניתן להתחיל תשלום');
+                    }
+                  } catch (err) {
+                    console.error('Payment start failed', err);
+                    setError(err.message || 'שגיאה בהתחלת תשלום');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                🔓 הפעל פרופיל בתשלום
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* כפתור להסרת תמונת פרופיל */}
         {profilePicture && (
