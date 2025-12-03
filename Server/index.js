@@ -21,6 +21,11 @@ let UserRouter = require('./Routers/UserRouter');
 app.use('/user', UserRouter);
 
 
+// ניתוב לאירועים
+let EventRouter = require('./Routers/EventRouter');
+app.use('/event', EventRouter);
+
+
 
 
 

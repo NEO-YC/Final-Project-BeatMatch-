@@ -13,6 +13,8 @@ import Footer from "./pages/Footer";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import MusicianProfile from "./pages/MusicianProfile";
+import Events from "./pages/Events";
+import CreateEvent from "./pages/CreateEvent";
 import api from "./services/api";
 
 function App() {
@@ -106,6 +108,8 @@ function App() {
             <Route path="/musician/:id" element={<MusicianProfile />} /> //search for musician by id
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/create-event" element={<CreateEvent />} />
           </Routes>
         </main>
         <Footer />

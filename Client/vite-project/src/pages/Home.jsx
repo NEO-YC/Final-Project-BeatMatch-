@@ -56,13 +56,13 @@ const Home = ({ isLoggedIn, isMusician, user, profileActive: profileActiveProp }
   const handleHideAll = () => setShowAll(false);
 
   const nextSlide = () => {
-    if (currentIndex < randomMusicians.length - cardsToShow) {
-      setCurrentIndex(currentIndex + 1);
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
     }
   };
   const prevSlide = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+    if (currentIndex < randomMusicians.length - cardsToShow) {
+      setCurrentIndex(currentIndex + 1);
     }
   };
 
@@ -128,11 +128,11 @@ const Home = ({ isLoggedIn, isMusician, user, profileActive: profileActiveProp }
       return (
         <div className="carousel-container">
           <button
-            className={`carousel-arrow carousel-arrow-right ${currentIndex === 0 ? 'disabled' : ''}`}
+            className={`carousel-arrow carousel-arrow-right ${currentIndex >= randomMusicians.length - cardsToShow ? 'disabled' : ''}`}
             onClick={prevSlide}
-            disabled={currentIndex === 0}
+            disabled={currentIndex >= randomMusicians.length - cardsToShow}
           >
-            ←
+            →
           </button>
 
           <div className="carousel-wrapper">
@@ -180,11 +180,11 @@ const Home = ({ isLoggedIn, isMusician, user, profileActive: profileActiveProp }
           </div>
 
           <button
-            className={`carousel-arrow carousel-arrow-left ${currentIndex >= randomMusicians.length - cardsToShow ? 'disabled' : ''}`}
+            className={`carousel-arrow carousel-arrow-left ${currentIndex === 0 ? 'disabled' : ''}`}
             onClick={nextSlide}
-            disabled={currentIndex >= randomMusicians.length - cardsToShow}
+            disabled={currentIndex === 0}
           >
-            →
+            ←
           </button>
         </div>
       );
@@ -319,6 +319,10 @@ const Home = ({ isLoggedIn, isMusician, user, profileActive: profileActiveProp }
                 <span className="pro-benefit-icon">⚡</span>
                 <span className="pro-benefit-text">תג PRO מיוחד בפרופיל</span>
               </div>
+              <div className="pro-benefit-item highlight-events">
+                <span className="pro-benefit-icon">🎉</span>
+                <span className="pro-benefit-text">גישה מלאה ללוח אירועים</span>
+              </div>
               <div className="pro-benefit-item">
                 <span className="pro-benefit-icon">💎</span>
                 <span className="pro-benefit-text">מעמד VIP בפלטפורמה</span>
@@ -331,21 +335,6 @@ const Home = ({ isLoggedIn, isMusician, user, profileActive: profileActiveProp }
           </div>
         </section>
       )}
-
-      {/* סקשן: אודות BeatMatch */}
-      <section className="home-about-section">
-        <h2>אודות BeatMatch</h2>
-        <p>
-          BeatMatch היא פלטפורמה שמחברת בין מוזיקאים, מפיקים ומארגני אירועים. 
-          המטרה שלנו היא להקל על תהליכי חיפוש, יצירת קשר ושיתופי פעולה — בחוויית שימוש נעימה, מהירה ומדויקת.
-        </p>
-        <p>
-          כאן תוכלו למצוא ולהציג פרופילים מקצועיים, לסנן לפי סגנון, כלי נגינה, אזור ועוד, 
-          כדי להגיע בדיוק לאנשים הנכונים בזמן הנכון.
-        </p>
-      
-        
-      </section>
 
       {/* גלריית נגנים */}
       <section className="home-musicians-gallery">

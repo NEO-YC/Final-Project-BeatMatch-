@@ -581,6 +581,32 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
+.pro-benefit-item.highlight-events {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 3px solid #fbbf24;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 28px rgba(251, 191, 36, 0.6);
+  }
+}
+
+.pro-benefit-item.highlight-events:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(251, 191, 36, 0.5);
+}
+
+.pro-benefit-item.highlight-events .pro-benefit-text {
+  color: #92400e;
+  font-size: 16px;
+}
+
 .pro-benefit-icon {
   font-size: 32px;
 }
@@ -1136,6 +1162,112 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
   border-color: transparent;
+}
+
+/* ================================
+   EVENTS SECTION - לוח אירועים (מאוזן)
+   ================================ */
+.home-events-section {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 50px 50px 45px;
+  margin: 50px auto;
+  border-radius: 24px;
+  max-width: 1300px;
+  box-shadow: 0 8px 28px rgba(251, 191, 36, 0.25);
+  text-align: center;
+}
+
+.events-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.home-events-section h2 {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+  color: #78350f;
+}
+
+.events-intro {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #92400e;
+  margin: 0 auto 32px;
+  max-width: 650px;
+}
+
+/* Mini Cards */
+.events-mini-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mini-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.mini-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #fbbf24;
+}
+
+.mini-card.highlight {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  border-color: #a78bfa;
+}
+
+.mini-card.highlight:hover {
+  border-color: #8b5cf6;
+}
+
+.mini-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.mini-card h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.mini-card p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #64748b;
+  margin: 0;
+}
+
+.events-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.events-actions .btn {
+  font-size: 16px;
+  padding: 14px 32px;
 }
 
 /* ================================

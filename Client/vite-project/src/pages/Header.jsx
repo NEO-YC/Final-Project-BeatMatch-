@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import api from '../services/api'
+import { eventsApi } from '../services/api'
 import "./Header.css"
 
 function Header() {
@@ -11,6 +12,7 @@ function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteStep, setDeleteStep] = useState(1)
+  const [openEventsCount, setOpenEventsCount] = useState(0)
   const menuRef = useRef(null)
   const navigate = useNavigate()
 
@@ -68,6 +70,8 @@ function Header() {
   useEffect(() => {
     const handleStorageChange = () => {
       loadUser()
+      // רענון האינדיקטור בעת שינוי
+      refreshEventsCount()
     }
 
     window.addEventListener('storage', handleStorageChange)
@@ -78,6 +82,21 @@ function Header() {
       window.removeEventListener('focus', handleStorageChange)
     }
   }, [])
+
+  // טעינת מספר אירועים פתוחים למוזיקאי פעיל
+  useEffect(() => {
+    refreshEventsCount()
+  }, [isActive])
+
+  const refreshEventsCount = async () => {
+    if (!isActive) { setOpenEventsCount(0); return }
+    try {
+      const res = await eventsApi.getOpenEventsCount()
+      setOpenEventsCount(res.count || 0)
+    } catch (e) {
+      setOpenEventsCount(0)
+    }
+  }
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -151,6 +170,12 @@ function Header() {
                 </svg>
               </NavLink>
               <NavLink to="/" className={({isActive}) => `header-link${isActive ? ' active' : ''}`}>דף הבית</NavLink>
+              <NavLink to="/events" className={({isActive}) => `header-link${isActive ? ' active' : ''}`}>
+                לוח אירועים
+                {isActive && openEventsCount > 0 && (
+                  <span className="inline-block min-w-[20px] px-1.5 py-0.5 rounded-full text-xs bg-rose-600 text-white ml-1" aria-label="אירועים פתוחים">{openEventsCount}</span>
+                )}
+              </NavLink>
             </div>
 
             {user ? (

@@ -1,5 +1,6 @@
 // Minimal API helper for auth (register / login)
-const BASE_URL = 'http://localhost:3000/user';
+const USER_BASE_URL = 'http://localhost:3000/user';
+const EVENT_BASE_URL = 'http://localhost:3000/event';
 
 async function request(path, options = {}) {
   const headers = options.headers ? { ...options.headers } : {};
@@ -12,7 +13,7 @@ async function request(path, options = {}) {
   const token = localStorage.getItem('token');
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${USER_BASE_URL}${path}`, { ...options, headers });
   let data = null;
   try { data = await res.json(); } catch (e) { /* no json */ }
 
@@ -140,4 +141,51 @@ export default {
   getMusicianById,
   createPayPalOrder,
   capturePayPalOrder
+};
+
+// ===== Events API (פשוט וקריא) =====
+export async function createEvent(payload) {
+  // פתוח לכולם: שליחת טופס אירוע חדש
+  const res = await fetch(`${EVENT_BASE_URL}/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+// שימוש ב-helper request עבור נתיבים שדורשים טוקן
+export function getOpenEvents() {
+  return requestAbsolute(`${EVENT_BASE_URL}/all`, { method: 'GET' });
+}
+
+export function getOpenEventsCount() {
+  return requestAbsolute(`${EVENT_BASE_URL}/count`, { method: 'GET' });
+}
+
+export function closeEvent(eventId) {
+  return requestAbsolute(`${EVENT_BASE_URL}/${eventId}/close`, { method: 'PUT' });
+}
+
+// helper קטן לקריאות מחוץ ל-USER_BASE_URL אך עם טוקן ואותו טיפול שגיאות
+async function requestAbsolute(url, options = {}) {
+  const headers = options.headers ? { ...options.headers } : {};
+  if (!headers['Content-Type'] && !(options.body instanceof FormData) && options.skipContentType !== true) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
+  const token = localStorage.getItem('token');
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(url, { ...options, headers });
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw data || { message: `Request failed: ${res.status}` };
+  return data;
+}
+
+export const eventsApi = {
+  createEvent,
+  getOpenEvents,
+  getOpenEventsCount,
+  closeEvent
 };
