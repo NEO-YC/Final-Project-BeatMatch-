@@ -1,6 +1,4 @@
 require('dotenv').config();
-// load environment variables from .env (if present)
-require('dotenv').config();
 const express=require('express');
 const mongoose=require('mongoose');
 const cors = require('cors');
@@ -9,7 +7,7 @@ app.use(express.json());
 app.use(cors());
 
 
-const uri = "mongodb+srv://david:Aa123456@cluster0.v1bla6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = process.env.MONGODB_URI;
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
 mongoose.connect(uri, clientOptions)
 .then(() => console.log('mongoDB connected succesfully ✅'))
@@ -26,10 +24,8 @@ let EventRouter = require('./Routers/EventRouter');
 app.use('/event', EventRouter);
 
 
+const PORT = process.env.PORT || 3000;
 
-
-
-
-app.listen(3000, () => {
-    console.log('Server is running on port 3000 🚀');
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT} 🚀`);
 }); 

@@ -1,11 +1,11 @@
-// Test query to find active musicians
+// Test query to fetch all users
 require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('./Models/UserModel');
 
 async function testQuery() {
     try {
-        const uri = "mongodb+srv://david:Aa123456@cluster0.v1bla6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+        const uri = process.env.MONGODB_URI;
         const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
         await mongoose.connect(uri, clientOptions);
         console.log('✅ Connected to MongoDB\n');
