@@ -17,7 +17,8 @@ exports.authenticateToken = async (req, res, next) => {
 
         if (!token) {
             return res.status(401).json({ 
-                message: 'גישה נדחתה - לא נמצא טוקן אימות' 
+                message: 'גישה נדחתה - לא נמצא טוקן אימות',
+                needsLogin: true
             });
         }
 

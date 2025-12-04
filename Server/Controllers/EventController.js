@@ -1,9 +1,16 @@
 const Event = require('../Models/EventModel');
 const User = require('../Models/UserModel');
 
-// יצירת אירוע חדש - פתוח לכולם (גם לא רשומים)
+// יצירת אירוע חדש - רק למשתמשים רשומים
 const createEvent = async (req, res) => {
   try {
+    // בדיקה שהמשתמש מחובר
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ 
+        message: 'יש להתחבר כדי לפרסם אירוע' 
+      });
+    }
+
     const { 
       contactName, 
       contactPhone, 
@@ -23,7 +30,7 @@ const createEvent = async (req, res) => {
       });
     }
 
-    // יצירת האירוע
+    // יצירת האירוע עם קישור למשתמש היוצר
     const newEvent = new Event({
       contactName,
       contactPhone,
@@ -34,7 +41,8 @@ const createEvent = async (req, res) => {
       budgetMin,
       budgetMax,
       description,
-      status: 'פתוח'
+      status: 'פתוח',
+      createdBy: req.user.userId
     });
 
     await newEvent.save();
@@ -59,7 +67,8 @@ const getAllEvents = async (req, res) => {
     // בדיקה שהמשתמש מחובר
     if (!req.user || !req.user.userId) {
       return res.status(401).json({ 
-        message: 'נדרשת התחברות' 
+        message: 'נדרשת התחברות',
+        needsLogin: true 
       });
     }
 
@@ -76,7 +85,7 @@ const getAllEvents = async (req, res) => {
     const hasActiveProfile = user.musicianProfile && 
                             user.musicianProfile.length > 0 && 
                             user.musicianProfile[0].isActive === true;
-
+    
     if (!hasActiveProfile) {
       return res.status(403).json({ 
         message: 'גישה למוזיקאים פעילים בלבד',
@@ -86,11 +95,16 @@ const getAllEvents = async (req, res) => {
 
     // שליפת כל האירועים הפתוחים, ממוינים לפי תאריך יצירה (החדשים ראשונים)
     const events = await Event.find({ status: 'פתוח' })
+      .populate({
+        path: 'createdBy',
+        select: 'firstname lastname email musicianProfile'
+      })
       .sort({ createdAt: -1 });
 
     res.status(200).json({ 
       events,
-      count: events.length 
+      count: events.length,
+      currentUserId: req.user.userId
     });
 
   } catch (error) {
@@ -193,9 +207,147 @@ const closeEvent = async (req, res) => {
   }
 };
 
+// עריכת אירוע - רק היוצר יכול לערוך
+const updateEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // בדיקה שהמשתמש מחובר
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ 
+        message: 'נדרשת התחברות' 
+      });
+    }
+
+    // מציאת האירוע
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ 
+        message: 'אירוע לא נמצא' 
+      });
+    }
+
+    // בדיקה שהמשתמש המחובר הוא זה שיצר את האירוע
+    if (event.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ 
+        message: 'רק יוצר האירוע יכול לערוך אותו' 
+      });
+    }
+
+    // עדכון השדות המותרים
+    const allowedUpdates = [
+      'contactName', 
+      'contactPhone', 
+      'contactEmail', 
+      'eventType', 
+      'eventDate', 
+      'location', 
+      'budgetMin', 
+      'budgetMax', 
+      'description'
+    ];
+
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        event[field] = req.body[field];
+      }
+    });
+
+    await event.save();
+
+    res.status(200).json({ 
+      message: 'האירוע עודכן בהצלחה!',
+      event 
+    });
+
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({ 
+      message: 'שגיאה בעדכון האירוע',
+      error: error.message 
+    });
+  }
+};
+
+// מחיקת אירוע - רק היוצר יכול למחוק
+const deleteEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // בדיקה שהמשתמש מחובר
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ 
+        message: 'נדרשת התחברות' 
+      });
+    }
+
+    // מציאת האירוע
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ 
+        message: 'אירוע לא נמצא' 
+      });
+    }
+
+    // בדיקה שהמשתמש המחובר הוא זה שיצר את האירוע
+    if (event.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ 
+        message: 'רק יוצר האירוע יכול למחוק אותו' 
+      });
+    }
+
+    // מחיקת האירוע
+    await Event.findByIdAndDelete(eventId);
+
+    res.status(200).json({ 
+      message: 'האירוע נמחק בהצלחה!' 
+    });
+
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ 
+      message: 'שגיאה במחיקת האירוע',
+      error: error.message 
+    });
+  }
+};
+
+// קבלת האירועים של המשתמש המחובר
+const getMyEvents = async (req, res) => {
+  try {
+    // בדיקה שהמשתמש מחובר
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ 
+        message: 'נדרשת התחברות' 
+      });
+    }
+
+    // שליפת כל האירועים של המשתמש, ממוינים לפי תאריך יצירה
+    const events = await Event.find({ createdBy: req.user.userId })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ 
+      events,
+      count: events.length 
+    });
+
+  } catch (error) {
+    console.error('Error fetching my events:', error);
+    res.status(500).json({ 
+      message: 'שגיאה בטעינת האירועים',
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createEvent,
   getAllEvents,
   getOpenEventsCount,
-  closeEvent
+  closeEvent,
+  updateEvent,
+  deleteEvent,
+  getMyEvents
 };

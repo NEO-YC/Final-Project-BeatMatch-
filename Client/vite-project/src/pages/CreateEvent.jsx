@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { eventsApi } from '../services/api';
 import './CreateEvent.css';
 
-// טופס פשוט לפרסום אירוע — פתוח לכולם
+// טופס לפרסום אירוע — רק למשתמשים רשומים
 export default function CreateEvent() {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [form, setForm] = useState({
     contactName: '',
     contactPhone: '',
@@ -18,6 +21,12 @@ export default function CreateEvent() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
+  useEffect(() => {
+    // בדיקה אם המשתמש מחובר
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -25,6 +34,14 @@ export default function CreateEvent() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    
+    // בדיקה נוספת לפני שליחה
+    if (!isLoggedIn) {
+      setMessage({ type: 'error', text: 'יש להתחבר כדי לפרסם אירוע' });
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
     try {
@@ -35,17 +52,50 @@ export default function CreateEvent() {
         budgetMax: form.budgetMax ? Number(form.budgetMax) : undefined,
       };
       await eventsApi.createEvent(payload);
-      setMessage({ type: 'success', text: 'האירוע פורסם בהצלחה! 🎉' });
+      setMessage({ type: 'success', text: 'האירוע פורסם בהצלחה! 🎉 מעבר לדף האירועים שלי...' });
       setForm({
         contactName: '', contactPhone: '', contactEmail: '', eventType: 'חתונה',
         eventDate: '', location: '', budgetMin: '', budgetMax: '', description: ''
       });
+      // מעבר לדף האירועים שלי אחרי 2 שניות
+      setTimeout(() => navigate('/my-events'), 2000);
     } catch (e) {
-      setMessage({ type: 'error', text: e?.message || 'שגיאה בפרסום האירוע' });
+      const errorMsg = e?.message || 'שגיאה בפרסום האירוע';
+      if (errorMsg.includes('התחבר')) {
+        setMessage({ type: 'error', text: 'יש להתחבר כדי לפרסם אירוע. מעבר לדף התחברות...' });
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setMessage({ type: 'error', text: errorMsg });
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  // אם המשתמש לא מחובר, הצג הודעה
+  if (!isLoggedIn) {
+    return (
+      <div className="create-event-container">
+        <div className="create-event-card login-required">
+          <div className="login-required-icon">🔒</div>
+          <h2 className="login-required-title">נדרשת התחברות</h2>
+          <p className="login-required-text">
+            כדי לפרסם אירוע חדש, עליך להיות משתמש רשום במערכת.
+            <br />
+            לאחר ההתחברות תוכל לפרסם, לערוך ולמחוק את האירועים שלך.
+          </p>
+          <div className="login-required-buttons">
+            <button className="btn primary-btn" onClick={() => navigate('/login')}>
+              התחברות
+            </button>
+            <button className="btn secondary-btn" onClick={() => navigate('/register')}>
+              הרשמה
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="create-event-container">

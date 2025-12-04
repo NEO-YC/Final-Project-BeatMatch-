@@ -17,24 +17,25 @@
 
 .event-card-header {
   display: flex;
-  gap: 16px;
-  padding: 20px;
+  gap: 12px;
+  padding: 16px 20px;
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border-bottom: 1px solid #fde68a;
+  align-items: center;
 }
 
 .event-icon {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  font-size: 28px;
+  font-size: 24px;
   flex-shrink: 0;
-  border: 3px solid #ffffff;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .event-header-info {
@@ -46,14 +47,14 @@
 }
 
 .event-type {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
 }
 
 .event-date {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
   font-weight: 500;
 }
@@ -141,3 +142,161 @@
   background: #f8fafc;
   border-color: #cbd5e1;
 }
+
+.event-btn.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.event-btn.warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.event-btn.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.event-btn.danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* פרטי מפרסם */
+.event-publisher-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.event-publisher-link:hover .event-publisher {
+  background: linear-gradient(135deg, #dbeafe 0%, #cffafe 100%);
+  border-bottom-color: #7dd3fc;
+}
+
+.event-publisher-link:hover .publisher-avatar {
+  transform: scale(1.05);
+}
+
+.event-publisher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-bottom: 1px solid #bae6fd;
+  transition: all 0.2s ease;
+}
+
+.publisher-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.publisher-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  font-size: 24px;
+}
+
+.publisher-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.publisher-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.publisher-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* מצב עריכה */
+.event-card.editing {
+  border: 2px solid #3b82f6;
+}
+
+.edit-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.edit-form h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #1e293b;
+  text-align: center;
+}
+
+.edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.edit-form input,
+.edit-form textarea {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.edit-form input:focus,
+.edit-form textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-form textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.edit-actions .event-btn {
+  flex: 1;
+}
+

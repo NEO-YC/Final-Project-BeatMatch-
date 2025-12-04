@@ -25,39 +25,46 @@
 }
 
 .payment-notice {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 2px solid #bfdbfe;
-  border-radius: 20px;
-  padding: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 24px;
+  padding: 64px 48px;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .payment-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
+  font-size: 80px;
+  margin-bottom: 24px;
+  display: inline-block;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
 .payment-notice h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 12px;
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
 }
 
 .payment-notice p {
-  font-size: 16px;
-  color: #475569;
+  font-size: 18px;
+  color: #f0f4ff;
   line-height: 1.6;
-  margin-bottom: 24px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-bottom: 32px;
 }
 
 .payment-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -99,41 +106,48 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  color: #ffffff;
-  padding: 12px 24px;
-  border-radius: 14px;
-  font-weight: 600;
+  background: #ffffff;
+  color: #667eea;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: none;
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255,255,255,0.2);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255,255,255,0.3);
 }
 
 .btn-secondary {
-  background: #ffffff;
-  color: #1e293b;
-  padding: 12px 24px;
-  border-radius: 14px;
-  font-weight: 600;
+  background: transparent;
+  color: #ffffff;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
   text-decoration: none;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #ffffff;
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-3px);
 }
 
 .empty-state {

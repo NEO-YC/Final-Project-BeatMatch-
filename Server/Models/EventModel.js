@@ -58,10 +58,17 @@ const eventSchema = new mongoose.Schema({
     default: 'פתוח' 
   },
 
+  // מי יצר את האירוע (משתמש רשום)
+  createdBy: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'P-users',
+    required: true 
+  },
+
   // מי סגר את האירוע (מוזיקאי שסגר עסקה)
   closedBy: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User',
+    ref: 'P-users',
     default: null 
   },
 

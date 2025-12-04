@@ -15,6 +15,7 @@ import Contact from "./pages/Contact";
 import MusicianProfile from "./pages/MusicianProfile";
 import Events from "./pages/Events";
 import CreateEvent from "./pages/CreateEvent";
+import MyEvents from "./pages/MyEvents";
 import api from "./services/api";
 
 function App() {
@@ -110,6 +111,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/events" element={<Events />} />
             <Route path="/create-event" element={<CreateEvent />} />
+            <Route path="/my-events" element={<MyEvents />} />
           </Routes>
         </main>
         <Footer />

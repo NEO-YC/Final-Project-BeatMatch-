@@ -145,14 +145,11 @@ export default {
 
 // ===== Events API (פשוט וקריא) =====
 export async function createEvent(payload) {
-  // פתוח לכולם: שליחת טופס אירוע חדש
-  const res = await fetch(`${EVENT_BASE_URL}/create`, {
+  // רק למשתמשים רשומים: שליחת טופס אירוע חדש
+  return requestAbsolute(`${EVENT_BASE_URL}/create`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  if (!res.ok) throw await res.json();
-  return res.json();
 }
 
 // שימוש ב-helper request עבור נתיבים שדורשים טוקן
@@ -160,8 +157,23 @@ export function getOpenEvents() {
   return requestAbsolute(`${EVENT_BASE_URL}/all`, { method: 'GET' });
 }
 
+export function getMyEvents() {
+  return requestAbsolute(`${EVENT_BASE_URL}/my-events`, { method: 'GET' });
+}
+
 export function getOpenEventsCount() {
   return requestAbsolute(`${EVENT_BASE_URL}/count`, { method: 'GET' });
+}
+
+export function updateEvent(eventId, payload) {
+  return requestAbsolute(`${EVENT_BASE_URL}/${eventId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function deleteEvent(eventId) {
+  return requestAbsolute(`${EVENT_BASE_URL}/${eventId}`, { method: 'DELETE' });
 }
 
 export function closeEvent(eventId) {
@@ -186,6 +198,9 @@ async function requestAbsolute(url, options = {}) {
 export const eventsApi = {
   createEvent,
   getOpenEvents,
+  getMyEvents,
   getOpenEventsCount,
+  updateEvent,
+  deleteEvent,
   closeEvent
 };

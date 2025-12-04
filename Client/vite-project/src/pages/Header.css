@@ -82,6 +82,11 @@ header {
   height: 18px;
 }
 
+/* Search link styling */
+.header-link .search-label {
+  margin-right: 6px;
+}
+
 /* Logo Section */
 .logo-section {
   display: flex;
