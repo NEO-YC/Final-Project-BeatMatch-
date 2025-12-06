@@ -7,6 +7,7 @@ import "./Header.css"
 
 function Header() {
   const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [profilePicture, setProfilePicture] = useState(null)
   const [isActive, setIsActive] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -26,9 +27,10 @@ function Header() {
         const displayName = userName || decoded.email?.split('@')[0] || 'משתמש'
         setUser({ 
           email: decoded.email, 
-          userId: decoded.userId,
+          userId: decoded.userId || decoded.id,
           displayName: displayName
         })
+        setIsAdmin(decoded.role === 'admin')
         
         // Load profile picture and PRO status from database
         try {
@@ -53,11 +55,13 @@ function Header() {
         localStorage.removeItem('token')
         localStorage.removeItem('userName')
         setUser(null)
+        setIsAdmin(false)
         setProfilePicture(null)
         setIsActive(false)
       }
     } else {
       setUser(null)
+      setIsAdmin(false)
       setProfilePicture(null)
       setIsActive(false)
     }
@@ -216,6 +220,19 @@ function Header() {
                       <span className="menu-icon">📅</span>
                       האירועים שלי
                     </NavLink>
+                    {isAdmin && (
+                      <>
+                        <div className="menu-divider"></div>
+                        <NavLink 
+                          to="/admin" 
+                          className="menu-item admin"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <span className="menu-icon">👑</span>
+                          לוח בקרה
+                        </NavLink>
+                      </>
+                    )}
                     <div className="menu-divider"></div>
                     <button 
                       className="menu-item logout"

@@ -35,7 +35,7 @@ exports.authenticateToken = async (req, res, next) => {
 
 
         // בדיקה שהמשתמש עדיין קיים במסד הנתונים
-        const user = await User.findById(decoded.userId);
+        const user = await User.findById(decoded.id || decoded.userId);
         if (!user) {
             return res.status(401).json({ 
                 message: 'המשתמש לא נמצא במערכת' 
@@ -45,7 +45,9 @@ exports.authenticateToken = async (req, res, next) => {
 
         // שמירת פרטי המשתמש ב-request object
         req.user = {
-            userId: user._id,
+            id: user._id,
+            userId: user._id,  // backward compatibility
+            role: user.role,
             email: user.email,
             firstname: user.firstname,
             lastname: user.lastname
@@ -61,4 +63,16 @@ exports.authenticateToken = async (req, res, next) => {
             message: 'טוקן לא תקין או פג תוקף' 
         });
     }
+};
+
+// Middleware to check if user is admin
+exports.requireAdmin = (req, res, next) => {
+    
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({
+            message: 'גישה מוגבלת - נדרשת רמת admin'
+        });
+    }
+    
+    next();
 };

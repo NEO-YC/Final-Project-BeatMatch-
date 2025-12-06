@@ -145,7 +145,8 @@ exports.login = async function (req, res) {
         const jwtSecret = process.env.JWT_SECRET;
         const token = jwt.sign(
             { 
-                userId: user._id,
+                id: user._id,
+                role: user.role,
                 email: user.email 
             },
             jwtSecret,
@@ -155,9 +156,7 @@ exports.login = async function (req, res) {
 
 
             
-        );
-        
-        // אם הכל תקין, מחזירים את פרטי המשתמש (ללא סיסמה) ואת הטוקן
+        );        // אם הכל תקין, מחזירים את פרטי המשתמש (ללא סיסמה) ואת הטוקן
         const userResponse = {
             _id: user._id,
             firstname: user.firstname,

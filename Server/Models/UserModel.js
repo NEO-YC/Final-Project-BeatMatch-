@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
   birthday:  { type: Date, required: true },
   phone:     { type: String, required: false, trim: true },
   isMusician:{ type: Boolean, default: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
 
   musicianProfile: {
     type: [{

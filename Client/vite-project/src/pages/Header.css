@@ -296,6 +296,20 @@ header h1 {
   color: #dc2626;
 }
 
+.menu-item.admin {
+  color: #c084fc;
+  font-weight: 500;
+}
+
+.menu-item.admin:hover {
+  background: #fdf4ff;
+  color: #9333ea;
+}
+
+.menu-item.admin .menu-icon {
+  color: #c084fc;
+}
+
 .menu-icon {
   font-size: 18px;
   width: 24px;

@@ -20,10 +20,16 @@ const {
     deleteUser
 } = require('../Controllers/UserController');
 
-
+// Admin controller functions
+const { 
+    getUsers, 
+    toggleRole, 
+    toggleSubscription, 
+    deleteUser: deleteUserAdmin 
+} = require('../Controllers/AdminController');
 
 // distructure the authentication middleware
-const { authenticateToken } = require('../Middlewear/Middlewear');
+const { authenticateToken, requireAdmin } = require('../Middlewear/Middlewear');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -59,9 +65,13 @@ router.get('/me/musician-profile', authenticateToken, getMusicianProfile);
 // מחיקת חשבון משתמש )
 router.delete('/account', authenticateToken, deleteUser);
 
+// ============ ADMIN ROUTES ============
+// Protected with auth + requireAdmin middleware
+router.get('/admin/users', authenticateToken, requireAdmin, getUsers);
+router.put('/admin/users/:id/role', authenticateToken, requireAdmin, toggleRole);
+router.put('/admin/users/:id/togglesub', authenticateToken, requireAdmin, toggleSubscription);
+router.delete('/admin/users/:id', authenticateToken, requireAdmin, deleteUserAdmin);
 
-
-
-
+module.exports = router;
 
 module.exports = router; 
